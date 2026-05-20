@@ -202,6 +202,10 @@
       image-rendering: pixelated;
     }
 
+    .clearance-mask {
+      image-rendering: auto;
+    }
+
     @media (max-width: 860px) {
       body {
         grid-template-columns: 1fr;
@@ -418,9 +422,13 @@
     const measureCtx = measureCanvas.getContext("2d");
     const maskCanvas = document.createElement("canvas");
     const maskCtx = maskCanvas.getContext("2d", { willReadFrequently: true });
+    const clearanceCanvas = document.createElement("canvas");
+    const clearanceCtx = clearanceCanvas.getContext("2d", { willReadFrequently: true });
 
     maskCanvas.width = POSTER.width * SCALE;
     maskCanvas.height = POSTER.height * SCALE;
+    clearanceCanvas.width = maskCanvas.width;
+    clearanceCanvas.height = maskCanvas.height;
 
     let particles = [];
     let maskData = null;
@@ -551,13 +559,81 @@
       ctx.fill();
     }
 
+    function closeMaskHoles(imageData) {
+      const { data, width, height } = imageData;
+      const total = width * height;
+      const outside = new Uint8Array(total);
+      const queue = new Int32Array(total);
+      let head = 0;
+      let tail = 0;
+
+      function enqueue(index) {
+        if (outside[index]) return;
+        if (data[index * 4 + 3] > 12) return;
+        outside[index] = 1;
+        queue[tail] = index;
+        tail += 1;
+      }
+
+      for (let x = 0; x < width; x += 1) {
+        enqueue(x);
+        enqueue((height - 1) * width + x);
+      }
+
+      for (let y = 0; y < height; y += 1) {
+        enqueue(y * width);
+        enqueue(y * width + width - 1);
+      }
+
+      while (head < tail) {
+        const index = queue[head];
+        head += 1;
+        const x = index % width;
+        const y = (index - x) / width;
+
+        if (x > 0) enqueue(index - 1);
+        if (x < width - 1) enqueue(index + 1);
+        if (y > 0) enqueue(index - width);
+        if (y < height - 1) enqueue(index + width);
+      }
+
+      for (let index = 0; index < total; index += 1) {
+        const alphaIndex = index * 4 + 3;
+        if (data[alphaIndex] <= 12 && outside[index] === 0) {
+          data[index * 4] = 0;
+          data[index * 4 + 1] = 0;
+          data[index * 4 + 2] = 0;
+          data[alphaIndex] = 255;
+        }
+      }
+    }
+
+    function updateClearanceCanvas(imageData) {
+      const paper = [244, 243, 241];
+      const clearance = clearanceCtx.createImageData(imageData.width, imageData.height);
+
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        if (imageData.data[i + 3] <= 12) continue;
+        clearance.data[i] = paper[0];
+        clearance.data[i + 1] = paper[1];
+        clearance.data[i + 2] = paper[2];
+        clearance.data[i + 3] = 255;
+      }
+
+      clearanceCtx.putImageData(clearance, 0, 0);
+    }
+
     function buildCollisionMask(layout, outlinePx) {
       maskCtx.setTransform(1, 0, 0, 1, 0, 0);
       maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
       maskCtx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
       drawMainTextToContext(maskCtx, layout, outlinePx);
       maskCtx.setTransform(1, 0, 0, 1, 0, 0);
-      return maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height).data;
+      const imageData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+      closeMaskHoles(imageData);
+      maskCtx.putImageData(imageData, 0, 0);
+      updateClearanceCanvas(imageData);
+      return imageData.data;
     }
 
     function renderMain(layout) {
@@ -574,32 +650,15 @@
       });
     }
 
-    function renderClearance(layout, outlinePx) {
+    function renderClearance() {
       clear(els.clearanceLayer);
-      const strokeWidth = Math.max(0, outlinePx * 2);
-
-      layout.forEach((item) => {
-        const text = svgEl("text", {
-          class: "clearance-text",
-          x: item.x.toFixed(2),
-          y: item.y.toFixed(2),
-          "font-size": item.size.toFixed(2),
-          "stroke-width": strokeWidth.toFixed(2)
-        });
-        text.textContent = item.text;
-        els.clearanceLayer.appendChild(text);
-      });
-
-      const obstacle = shapeObstacle();
-      els.clearanceLayer.appendChild(svgEl("rect", {
-        class: "clearance-obstacle",
-        x: obstacle.x,
-        y: obstacle.y,
-        width: obstacle.width,
-        height: obstacle.height,
-        rx: obstacle.radius,
-        ry: obstacle.radius,
-        "stroke-width": strokeWidth.toFixed(2)
+      els.clearanceLayer.appendChild(svgEl("image", {
+        class: "clearance-mask",
+        x: 0,
+        y: 0,
+        width: POSTER.width,
+        height: POSTER.height,
+        href: clearanceCanvas.toDataURL("image/png")
       }));
     }
 
@@ -911,7 +970,6 @@
       updateReadouts();
       const layout = buildMainLayout(els.mainText.value);
       renderMain(layout);
-      renderClearance(layout, numberValue(els.outlinePx));
       renderObstacle();
       const obstacle = shapeObstacle();
       repelCenters = layout.map((item) => ({
@@ -922,6 +980,7 @@
         y: obstacle.y + obstacle.height / 2
       });
       maskData = buildCollisionMask(layout, numberValue(els.outlinePx));
+      renderClearance();
       renderDebugMask(els.showMask.checked);
       if (layoutSignature !== gridSignature()) rebuildGrid();
       els.count.textContent = `${particles.length} grid words simulated`;
