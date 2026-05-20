@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Editable Text Collision Poster</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #0a0a0a;
+      --paper: #f2f1ef;
+      --panel: #ffffff;
+      --line: #d7d5d0;
+      --muted: #6e6b64;
+      --focus: #1f6feb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      background: #f7f6f3;
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .controls {
+      height: 100vh;
+      overflow: auto;
+      padding: 24px;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0 0 22px;
+      font-size: 20px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .control {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #34322e;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 11px;
+      color: var(--ink);
+      background: #fff;
+      font: inherit;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 86px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgb(31 111 235 / 14%);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #111;
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 56px;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .value {
+      min-width: 52px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      text-align: right;
+      font-size: 13px;
+      color: #211f1b;
+      background: #fafafa;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 8px 0 18px;
+      font-size: 14px;
+      color: #2d2a25;
+    }
+
+    .check-row input {
+      width: 17px;
+      height: 17px;
+      accent-color: #111;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      min-height: 40px;
+      border: 1px solid #111;
+      border-radius: 8px;
+      background: #111;
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #fff;
+      color: #111;
+    }
+
+    .meta {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .stage {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 34px;
+      overflow: auto;
+    }
+
+    #posterSvg {
+      width: min(74vw, 780px);
+      height: auto;
+      overflow: visible;
+    }
+
+    .poster-bg {
+      fill: var(--paper);
+    }
+
+    .main-text,
+    .filler-text,
+    .svg-obstacle {
+      fill: #000;
+    }
+
+    .main-text,
+    .filler-text {
+      font-family: Arial Black, Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      letter-spacing: 0;
+      dominant-baseline: alphabetic;
+    }
+
+    .debug-mask {
+      opacity: 0.12;
+      image-rendering: pixelated;
+    }
+
+    @media (max-width: 820px) {
+      body {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .stage {
+        min-height: 0;
+      }
+
+      #posterSvg {
+        width: min(92vw, 720px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside class="controls">
+    <h1>Collision Text Poster</h1>
+
+    <div class="control">
+      <label for="mainText">Editable text</label>
+      <input id="mainText" type="text" value="Save the Date">
+    </div>
+
+    <div class="control">
+      <label for="outlinePx">Invisible outline</label>
+      <div class="range-row">
+        <input id="outlinePx" type="range" min="0" max="80" value="28">
+        <output id="outlineValue" class="value">28px</output>
+      </div>
+    </div>
+
+    <div class="control">
+      <label for="edgePx">Poster edge</label>
+      <div class="range-row">
+        <input id="edgePx" type="range" min="8" max="72" value="24">
+        <output id="edgeValue" class="value">24px</output>
+      </div>
+    </div>
+
+    <div class="control">
+      <label for="fillText">Filler text</label>
+      <textarea id="fillText">2026 INDIGO SAVE THE DATE</textarea>
+    </div>
+
+    <div class="control">
+      <label for="seed">Seed</label>
+      <input id="seed" type="number" value="14" min="1" max="9999">
+    </div>
+
+    <label class="check-row">
+      <input id="showMask" type="checkbox">
+      Show collision mask
+    </label>
+
+    <div class="actions">
+      <button id="shuffle" class="secondary" type="button">Shuffle</button>
+      <button id="exportSvg" type="button">Export SVG</button>
+    </div>
+
+    <div id="count" class="meta"></div>
+  </aside>
+
+  <main class="stage">
+    <svg id="posterSvg" viewBox="0 0 900 1100" role="img" aria-label="Generated text collision poster">
+      <rect width="900" height="1100" fill="#f7f6f3"></rect>
+      <g id="posterGroup" transform="translate(74 94) rotate(-10 380 480)">
+        <rect class="poster-bg" width="760" height="960"></rect>
+        <g id="debugLayer"></g>
+        <g id="fillerLayer"></g>
+        <g id="mainLayer"></g>
+        <g id="shapeLayer"></g>
+      </g>
+    </svg>
+  </main>
+
+  <script>
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const POSTER = { width: 760, height: 960 };
+    const SCALE = 2;
+    const FONT_STACK = "Arial Black, Arial, Helvetica, sans-serif";
+
+    const els = {
+      mainText: document.querySelector("#mainText"),
+      outlinePx: document.querySelector("#outlinePx"),
+      outlineValue: document.querySelector("#outlineValue"),
+      edgePx: document.querySelector("#edgePx"),
+      edgeValue: document.querySelector("#edgeValue"),
+      fillText: document.querySelector("#fillText"),
+      seed: document.querySelector("#seed"),
+      showMask: document.querySelector("#showMask"),
+      shuffle: document.querySelector("#shuffle"),
+      exportSvg: document.querySelector("#exportSvg"),
+      count: document.querySelector("#count"),
+      svg: document.querySelector("#posterSvg"),
+      debugLayer: document.querySelector("#debugLayer"),
+      fillerLayer: document.querySelector("#fillerLayer"),
+      mainLayer: document.querySelector("#mainLayer"),
+      shapeLayer: document.querySelector("#shapeLayer")
+    };
+
+    const measureCanvas = document.createElement("canvas");
+    const measureCtx = measureCanvas.getContext("2d");
+    const maskCanvas = document.createElement("canvas");
+    const maskCtx = maskCanvas.getContext("2d", { willReadFrequently: true });
+
+    maskCanvas.width = POSTER.width * SCALE;
+    maskCanvas.height = POSTER.height * SCALE;
+
+    function svgEl(name, attrs = {}) {
+      const node = document.createElementNS(SVG_NS, name);
+      Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+      return node;
+    }
+
+    function clear(node) {
+      while (node.firstChild) node.removeChild(node.firstChild);
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function mulberry32(seed) {
+      let t = seed >>> 0;
+      return function random() {
+        t += 0x6d2b79f5;
+        let x = t;
+        x = Math.imul(x ^ (x >>> 15), x | 1);
+        x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+        return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function font(size) {
+      return `900 ${size}px ${FONT_STACK}`;
+    }
+
+    function normalizeLines(text) {
+      const trimmed = text.trim() || "Save the Date";
+      if (trimmed.includes("\n")) {
+        return trimmed.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+      }
+      return trimmed.split(/\s+/).filter(Boolean);
+    }
+
+    function metricsFor(text, size) {
+      measureCtx.font = font(size);
+      const metrics = measureCtx.measureText(text);
+      return {
+        width: metrics.width,
+        ascent: metrics.actualBoundingBoxAscent || size * 0.78,
+        descent: metrics.actualBoundingBoxDescent || size * 0.18,
+        left: metrics.actualBoundingBoxLeft || 0,
+        right: metrics.actualBoundingBoxRight || metrics.width
+      };
+    }
+
+    function fitSize(text, maxWidth, maxHeight, maxSize) {
+      const at100 = metricsFor(text, 100).width || 100;
+      const widthSize = (maxWidth / at100) * 100;
+      return clamp(Math.min(widthSize, maxHeight), 54, maxSize);
+    }
+
+    function buildMainLayout(text) {
+      const lines = normalizeLines(text).slice(0, 5);
+      const bottomReserve = 170;
+      const topPad = 48;
+      const sidePad = 44;
+      const availableHeight = POSTER.height - topPad - bottomReserve;
+      const band = availableHeight / lines.length;
+
+      return lines.map((line, index) => {
+        const size = fitSize(line, POSTER.width - sidePad * 2, band * 0.95, 260);
+        const metrics = metricsFor(line, size);
+        const x = (POSTER.width - metrics.width) / 2;
+        const y = topPad + band * index + band * 0.76;
+        return { text: line, x, y, size, metrics };
+      });
+    }
+
+    function shapeObstacle() {
+      return {
+        x: 52,
+        y: 804,
+        width: 656,
+        height: 92,
+        radius: 46
+      };
+    }
+
+    function drawRoundRect(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + width, y, x + width, y + height, r);
+      ctx.arcTo(x + width, y + height, x, y + height, r);
+      ctx.arcTo(x, y + height, x, y, r);
+      ctx.arcTo(x, y, x + width, y, r);
+      ctx.closePath();
+    }
+
+    function drawMainTextToContext(ctx, layout, outlinePx) {
+      const radius = Math.max(0, outlinePx);
+      const step = radius <= 2 ? 1 : Math.max(2, Math.round(radius / 9));
+      const offsets = [];
+
+      if (radius === 0) {
+        offsets.push([0, 0]);
+      } else {
+        for (let dx = -radius; dx <= radius; dx += step) {
+          for (let dy = -radius; dy <= radius; dy += step) {
+            if (dx * dx + dy * dy <= radius * radius) offsets.push([dx, dy]);
+          }
+        }
+        offsets.push([0, 0]);
+      }
+
+      ctx.fillStyle = "#000";
+      layout.forEach((item) => {
+        ctx.font = font(item.size);
+        offsets.forEach(([dx, dy]) => ctx.fillText(item.text, item.x + dx, item.y + dy));
+      });
+
+      const obstacle = shapeObstacle();
+      drawRoundRect(
+        ctx,
+        obstacle.x - radius,
+        obstacle.y - radius,
+        obstacle.width + radius * 2,
+        obstacle.height + radius * 2,
+        obstacle.radius + radius
+      );
+      ctx.fill();
+    }
+
+    function buildCollisionMask(layout, outlinePx) {
+      maskCtx.setTransform(1, 0, 0, 1, 0, 0);
+      maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+      maskCtx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+      drawMainTextToContext(maskCtx, layout, outlinePx);
+      maskCtx.setTransform(1, 0, 0, 1, 0, 0);
+      return maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height).data;
+    }
+
+    function renderMain(layout) {
+      clear(els.mainLayer);
+      layout.forEach((item) => {
+        const text = svgEl("text", {
+          class: "main-text",
+          x: item.x.toFixed(2),
+          y: item.y.toFixed(2),
+          "font-size": item.size.toFixed(2)
+        });
+        text.textContent = item.text;
+        els.mainLayer.appendChild(text);
+      });
+    }
+
+    function renderObstacle() {
+      clear(els.shapeLayer);
+      const obstacle = shapeObstacle();
+      els.shapeLayer.appendChild(svgEl("rect", {
+        class: "svg-obstacle",
+        x: obstacle.x,
+        y: obstacle.y,
+        width: obstacle.width,
+        height: obstacle.height,
+        rx: obstacle.radius,
+        ry: obstacle.radius
+      }));
+    }
+
+    function renderDebugMask(show) {
+      clear(els.debugLayer);
+      if (!show) return;
+      els.debugLayer.appendChild(svgEl("image", {
+        class: "debug-mask",
+        x: 0,
+        y: 0,
+        width: POSTER.width,
+        height: POSTER.height,
+        href: maskCanvas.toDataURL("image/png")
+      }));
+    }
+
+    function buildTokens(source) {
+      const words = source.toUpperCase().split(/\s+/).filter(Boolean);
+      const chars = words.join("").split("").filter((char) => /[A-Z0-9]/.test(char));
+      const tokens = [];
+
+      for (let i = 0; i < 8; i += 1) {
+        words.forEach((word) => tokens.push(word));
+      }
+
+      for (let i = 0; i < 10; i += 1) {
+        chars.forEach((char) => tokens.push(char));
+      }
+
+      return tokens.length ? tokens : ["2026", "INDIGO"];
+    }
+
+    function textBox(token, size, x, y) {
+      const metrics = metricsFor(token, size);
+      return {
+        left: x - metrics.left,
+        top: y - metrics.ascent,
+        right: x + metrics.right,
+        bottom: y + metrics.descent,
+        width: metrics.width,
+        height: metrics.ascent + metrics.descent
+      };
+    }
+
+    function boxInside(box, edgePx) {
+      return (
+        box.left >= edgePx &&
+        box.top >= edgePx &&
+        box.right <= POSTER.width - edgePx &&
+        box.bottom <= POSTER.height - edgePx
+      );
+    }
+
+    function boxesOverlap(a, b, pad = 3) {
+      return !(
+        a.right + pad < b.left ||
+        a.left - pad > b.right ||
+        a.bottom + pad < b.top ||
+        a.top - pad > b.bottom
+      );
+    }
+
+    function hitsMask(box, maskData) {
+      const step = 5;
+      const left = clamp(Math.floor(box.left * SCALE), 0, maskCanvas.width - 1);
+      const right = clamp(Math.ceil(box.right * SCALE), 0, maskCanvas.width - 1);
+      const top = clamp(Math.floor(box.top * SCALE), 0, maskCanvas.height - 1);
+      const bottom = clamp(Math.ceil(box.bottom * SCALE), 0, maskCanvas.height - 1);
+      const stride = maskCanvas.width * 4;
+      const scaledStep = step * SCALE;
+
+      for (let y = top; y <= bottom; y += scaledStep) {
+        for (let x = left; x <= right; x += scaledStep) {
+          if (maskData[y * stride + x * 4 + 3] > 12) return true;
+        }
+      }
+
+      return false;
+    }
+
+    function sizeForToken(token, random) {
+      const isSingle = token.length === 1;
+      const sizes = isSingle ? [32, 38, 44, 52] : [30, 36, 42, 48, 54];
+      return sizes[Math.floor(random() * sizes.length)];
+    }
+
+    function packFiller(maskData) {
+      clear(els.fillerLayer);
+      const random = mulberry32(Number(els.seed.value) || 1);
+      const tokens = buildTokens(els.fillText.value);
+      const accepted = [];
+      const edgePx = Number(els.edgePx.value);
+      const maxItems = 82;
+      const maxAttempts = 11000;
+
+      for (let attempt = 0; attempt < maxAttempts && accepted.length < maxItems; attempt += 1) {
+        const token = tokens[Math.floor(random() * tokens.length)];
+        const size = sizeForToken(token, random);
+        const metrics = metricsFor(token, size);
+        const x = edgePx + random() * (POSTER.width - edgePx * 2 - metrics.width);
+        const y = edgePx + size + random() * (POSTER.height - edgePx * 2 - size);
+        const box = textBox(token, size, x, y);
+
+        if (!boxInside(box, edgePx)) continue;
+        if (hitsMask(box, maskData)) continue;
+        if (accepted.some((item) => boxesOverlap(item.box, box, 2))) continue;
+
+        accepted.push({ token, size, x, y, box });
+      }
+
+      accepted.forEach((item) => {
+        const text = svgEl("text", {
+          class: "filler-text",
+          x: item.x.toFixed(2),
+          y: item.y.toFixed(2),
+          "font-size": item.size.toFixed(2)
+        });
+        text.textContent = item.token;
+        els.fillerLayer.appendChild(text);
+      });
+
+      els.count.textContent = `${accepted.length} filler objects placed`;
+    }
+
+    function render() {
+      els.outlineValue.textContent = `${els.outlinePx.value}px`;
+      els.edgeValue.textContent = `${els.edgePx.value}px`;
+
+      const layout = buildMainLayout(els.mainText.value);
+      renderMain(layout);
+      renderObstacle();
+
+      const maskData = buildCollisionMask(layout, Number(els.outlinePx.value));
+      packFiller(maskData);
+      renderDebugMask(els.showMask.checked);
+    }
+
+    function exportSvg() {
+      const clone = els.svg.cloneNode(true);
+      const debug = clone.querySelector("#debugLayer");
+      if (debug) debug.replaceChildren();
+      clone.setAttribute("xmlns", SVG_NS);
+
+      const source = `<?xml version="1.0" encoding="UTF-8"?>\n${new XMLSerializer().serializeToString(clone)}`;
+      const blob = new Blob([source], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "collision-text-poster.svg";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    [
+      els.mainText,
+      els.outlinePx,
+      els.edgePx,
+      els.fillText,
+      els.seed,
+      els.showMask
+    ].forEach((element) => {
+      element.addEventListener("input", render);
+      element.addEventListener("change", render);
+    });
+
+    els.shuffle.addEventListener("click", () => {
+      els.seed.value = String((Number(els.seed.value) || 1) + 1);
+      render();
+    });
+
+    els.exportSvg.addEventListener("click", exportSvg);
+
+    render();
+  </script>
+</body>
+</html>
