@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Editable Text Collision Poster</title>
+  <link rel="stylesheet" href="https://use.typekit.net/xfw8hqh.css">
   <style>
     :root {
       color-scheme: light;
@@ -26,7 +27,7 @@
       overflow: hidden;
       background: #f7f6f3;
       color: var(--ink);
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: "univers-next-pro", sans-serif;
     }
 
     .controls {
@@ -35,13 +36,20 @@
       top: 0;
       left: 0;
       width: min(340px, 34vw);
-      max-width: 100vw;
-      height: 100vh;
+      max-width: 100%;
+      height: 100%;
       overflow: auto;
       padding: 24px;
       background: var(--panel);
       border-right: 1px solid var(--line);
       backdrop-filter: blur(18px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    body.controls-hidden .controls {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-100%);
     }
 
     h1 {
@@ -68,6 +76,10 @@
       margin-bottom: 16px;
     }
 
+    .control[hidden] {
+      display: none;
+    }
+
     label {
       font-size: 12px;
       font-weight: 700;
@@ -77,7 +89,10 @@
     }
 
     input[type="text"],
-    input[type="file"] {
+    input[type="search"],
+    input[type="file"],
+    input[type="number"],
+    select {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -88,7 +103,8 @@
       outline: none;
     }
 
-    input:focus {
+    input:focus,
+    select:focus {
       border-color: var(--focus);
       box-shadow: 0 0 0 3px rgb(31 111 235 / 14%);
     }
@@ -98,11 +114,85 @@
       accent-color: #111;
     }
 
+    input[type="number"] {
+      appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      appearance: none;
+      margin: 0;
+    }
+
+    select {
+      appearance: none;
+    }
+
     .range-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 68px;
       align-items: center;
       gap: 10px;
+    }
+
+    .cluster-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 42px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .cluster-row button {
+      min-height: 42px;
+      padding: 0;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .cluster-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 34px;
+    }
+
+    .cluster-chip {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      min-height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .cluster-chip span {
+      min-width: 0;
+      padding: 6px 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .cluster-chip button {
+      width: 28px;
+      min-height: 30px;
+      border: 0;
+      border-left: 1px solid var(--line);
+      border-radius: 0;
+      background: #fff;
+      color: #111;
+      font-size: 14px;
+    }
+
+    .font-status {
+      min-height: 14px;
+      color: #6b665f;
+      font-size: 11px;
+      line-height: 1.3;
     }
 
     .value {
@@ -116,11 +206,25 @@
       background: #fafafa;
     }
 
+    .number-value {
+      height: 34px;
+      font-family: inherit;
+      font-variant-numeric: tabular-nums;
+    }
+
     .actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
       margin-top: 10px;
+    }
+
+    .save-status {
+      min-height: 18px;
+      margin-top: 10px;
+      color: #4d4942;
+      font-size: 12px;
+      line-height: 1.35;
     }
 
     button {
@@ -130,6 +234,7 @@
       background: #111;
       color: #fff;
       font: inherit;
+      font-size: 13px;
       font-weight: 700;
       cursor: pointer;
     }
@@ -139,19 +244,34 @@
       color: #111;
     }
 
-    .stage,
-    #posterSvg {
-      width: 100vw;
-      height: 100vh;
+    .controls-toggle {
+      position: fixed;
+      z-index: 6;
+      top: 16px;
+      right: 16px;
+      min-height: 38px;
+      padding: 0 14px;
+      border-color: rgb(17 17 17 / 72%);
+      background: rgb(255 255 255 / 88%);
+      color: #111;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 28px rgb(0 0 0 / 10%);
+    }
+
+    .controls-toggle[aria-expanded="false"] {
+      background: #111;
+      color: #fff;
     }
 
     .stage {
       position: fixed;
-      inset: 0;
+      inset: 10px;
     }
 
     #posterSvg {
       display: block;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
       touch-action: none;
       background: #f7f6f3;
@@ -164,10 +284,17 @@
     .main-text,
     .grid-glyph {
       fill: #000;
-      font-family: Arial Black, Arial, Helvetica, sans-serif;
-      font-weight: 900;
+      font-family: "univers-next-pro", sans-serif;
       letter-spacing: 0;
       dominant-baseline: alphabetic;
+    }
+
+    .main-text {
+      font-weight: 700;
+    }
+
+    .grid-glyph {
+      font-weight: 700;
     }
 
     .main-text {
@@ -194,85 +321,98 @@
       pointer-events: none;
     }
 
+    #gridMaskWords .mask-word,
+    #gridMaskWords .mask-custom {
+      fill: black;
+    }
+
     @media (max-width: 760px) {
       .controls {
-        width: 100vw;
-        height: 42vh;
+        width: 100%;
+        height: 42%;
         border-right: 0;
         border-bottom: 1px solid var(--line);
+      }
+
+      body.controls-hidden .controls {
+        transform: translateY(-100%);
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
-  <aside class="controls">
+  <button id="toggleControls" class="controls-toggle" type="button" aria-expanded="true" aria-controls="controlsPanel">Hide Controls</button>
+
+  <aside id="controlsPanel" class="controls">
     <h1>Collision Text Poster</h1>
 
     <div class="control">
-      <label for="mainText">Editable text</label>
-      <input id="mainText" type="text" value="Save the Date">
+      <label for="clusterInput">Text clusters</label>
+      <div class="cluster-row">
+        <input id="clusterInput" type="text" placeholder="Add a word or phrase">
+        <button id="addCluster" type="button" aria-label="Add text cluster">+</button>
+      </div>
+      <div id="clusterList" class="cluster-list" aria-label="Text clusters"></div>
+      <input id="mainText" type="hidden" value='["Save","the","Date"]'>
+    </div>
+
+    <div class="section-title">Typography</div>
+
+    <div class="control">
+      <label for="fontFamily">Font</label>
+      <input id="fontFamily" type="search" list="fontOptions" value="univers-next-pro" autocomplete="off" spellcheck="false">
+      <datalist id="fontOptions"></datalist>
+      <div id="fontStatus" class="font-status" aria-live="polite"></div>
+    </div>
+
+    <div class="control">
+      <label for="fontWeight">Weight</label>
+      <select id="fontWeight">
+        <option value="400">400</option>
+        <option value="500">500</option>
+        <option value="600">600</option>
+        <option value="700" selected>700</option>
+        <option value="800">800</option>
+        <option value="900">900</option>
+      </select>
+    </div>
+
+    <div class="control">
+      <label for="letterSpacing">Letter spacing</label>
+      <div class="range-row">
+        <input id="letterSpacing" type="range" min="-2" max="6" step="0.1" value="0">
+        <input id="letterSpacingValue" class="value number-value" type="number" min="-2" max="6" step="0.1" value="0" aria-label="Letter spacing value">
+      </div>
     </div>
 
     <div class="control">
       <label for="wordSize">Word size</label>
       <div class="range-row">
-        <input id="wordSize" type="range" min="6" max="28" step="0.1" value="22">
-        <output id="wordSizeValue" class="value">22%</output>
+        <input id="wordSize" type="range" min="6" max="28" step="0.1" value="20">
+        <input id="wordSizeValue" class="value number-value" type="number" min="6" max="28" step="0.1" value="20" aria-label="Word size value">
       </div>
     </div>
 
     <div class="control">
       <label for="safeZone">Safe zone</label>
       <div class="range-row">
-        <input id="safeZone" type="range" min="0" max="12" step="0.1" value="3.1">
-        <output id="safeZoneValue" class="value">3.1%</output>
+        <input id="safeZone" type="range" min="0" max="60" step="1" value="10">
+        <input id="safeZoneValue" class="value number-value" type="number" min="0" max="60" step="1" value="10" aria-label="Safe zone value">
       </div>
+      <label for="showSafeZone" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-transform:none;font-weight:400;font-size:12px;color:#6b665f;">
+        <input id="showSafeZone" type="checkbox"> Show safe zone overlay
+      </label>
     </div>
 
     <div class="control">
       <label for="edgePct">Canvas edge</label>
       <div class="range-row">
-        <input id="edgePct" type="range" min="0" max="10" step="0.1" value="2.4">
-        <output id="edgeValue" class="value">2.4%</output>
-      </div>
-    </div>
-
-    <div class="section-title">Grid</div>
-
-    <div class="control">
-      <label for="gridText">Grid text</label>
-      <input id="gridText" type="text" value="INDIGO 2026">
-    </div>
-
-    <div class="control">
-      <label for="gridSize">Grid text size</label>
-      <div class="range-row">
-        <input id="gridSize" type="range" min="1.5" max="9" step="0.1" value="4.7">
-        <output id="gridSizeValue" class="value">4.7%</output>
-      </div>
-    </div>
-
-    <div class="control">
-      <label for="columnGap">Grid x padding</label>
-      <div class="range-row">
-        <input id="columnGap" type="range" min="-2" max="16" step="0.1" value="3.8">
-        <output id="columnGapValue" class="value">3.8%</output>
-      </div>
-    </div>
-
-    <div class="control">
-      <label for="rowGap">Grid y padding</label>
-      <div class="range-row">
-        <input id="rowGap" type="range" min="-1" max="10" step="0.1" value="0.8">
-        <output id="rowGapValue" class="value">0.8%</output>
-      </div>
-    </div>
-
-    <div class="control">
-      <label for="gridSpeed">Grid left speed</label>
-      <div class="range-row">
-        <input id="gridSpeed" type="range" min="0" max="16" step="0.1" value="1.8">
-        <output id="gridSpeedValue" class="value">1.8%</output>
+        <input id="edgePct" type="range" min="0" max="10" step="0.1" value="1">
+        <input id="edgeValue" class="value number-value" type="number" min="0" max="10" step="0.1" value="1" aria-label="Canvas edge value">
       </div>
     </div>
 
@@ -281,40 +421,56 @@
     <div class="control">
       <label for="wordGap">Word collision gap</label>
       <div class="range-row">
-        <input id="wordGap" type="range" min="0" max="8" step="0.1" value="0.8">
-        <output id="wordGapValue" class="value">0.8%</output>
+        <input id="wordGap" type="range" min="0" max="60" step="0.1" value="6">
+        <input id="wordGapValue" class="value number-value" type="number" min="0" max="60" step="0.1" value="6" aria-label="Word collision gap value">
       </div>
     </div>
 
     <div class="control">
       <label for="floatStrength">Float strength</label>
       <div class="range-row">
-        <input id="floatStrength" type="range" min="0" max="8" step="0.1" value="1.4">
-        <output id="floatStrengthValue" class="value">1.4%</output>
+        <input id="floatStrength" type="range" min="0" max="8" step="0.1" value="6">
+        <input id="floatStrengthValue" class="value number-value" type="number" min="0" max="8" step="0.1" value="6" aria-label="Float strength value">
+      </div>
+    </div>
+
+    <div class="control">
+      <label for="floatSpeed">Float speed</label>
+      <div class="range-row">
+        <input id="floatSpeed" type="range" min="0" max="18" step="0.1" value="6">
+        <input id="floatSpeedValue" class="value number-value" type="number" min="0" max="18" step="0.1" value="6" aria-label="Float speed value">
       </div>
     </div>
 
     <div class="control">
       <label for="rotationAmount">Rotation amount</label>
       <div class="range-row">
-        <input id="rotationAmount" type="range" min="0" max="100" step="1" value="34">
-        <output id="rotationAmountValue" class="value">34%</output>
+        <input id="rotationAmount" type="range" min="0" max="100" step="1" value="75">
+        <input id="rotationAmountValue" class="value number-value" type="number" min="0" max="100" step="1" value="75" aria-label="Rotation amount value">
+      </div>
+    </div>
+
+    <div class="control">
+      <label for="rotationFloat">Rotation float</label>
+      <div class="range-row">
+        <input id="rotationFloat" type="range" min="0" max="10" step="0.1" value="6">
+        <input id="rotationFloatValue" class="value number-value" type="number" min="0" max="10" step="0.1" value="6" aria-label="Rotation float value">
       </div>
     </div>
 
     <div class="control">
       <label for="bounce">Bounce</label>
       <div class="range-row">
-        <input id="bounce" type="range" min="20" max="100" value="82">
-        <output id="bounceValue" class="value">82%</output>
+        <input id="bounce" type="range" min="20" max="100" value="100">
+        <input id="bounceValue" class="value number-value" type="number" min="20" max="100" step="1" value="100" aria-label="Bounce value">
       </div>
     </div>
 
     <div class="control">
       <label for="friction">Move friction</label>
       <div class="range-row">
-        <input id="friction" type="range" min="0" max="8" step="0.1" value="0.7">
-        <output id="frictionValue" class="value">0.7%</output>
+        <input id="friction" type="range" min="0" max="8" step="0.1" value="0">
+        <input id="frictionValue" class="value number-value" type="number" min="0" max="8" step="0.1" value="0" aria-label="Move friction value">
       </div>
     </div>
 
@@ -328,14 +484,23 @@
     <div class="actions">
       <button id="resetWords" class="secondary" type="button">Reset</button>
       <button id="exportSvg" type="button">Export SVG</button>
+      <button id="saveDefaults" class="secondary" type="button">Save Defaults</button>
     </div>
+    <div id="saveStatus" class="save-status" aria-live="polite"></div>
   </aside>
 
   <main class="stage">
-    <svg id="posterSvg" viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Generated text collision poster">
-      <rect class="paper" width="100" height="100"></rect>
-      <g id="gridLayer"></g>
+    <svg id="posterSvg" viewBox="0 0 100 100" preserveAspectRatio="xMinYMin meet" role="img" aria-label="Generated text collision poster">
+      <defs>
+        <mask id="gridMask" maskUnits="userSpaceOnUse">
+          <rect id="gridMaskBg" fill="white" width="100" height="100"/>
+          <g id="gridMaskWords"></g>
+        </mask>
+      </defs>
+      <rect id="paper" class="paper" width="100" height="100"></rect>
+      <g id="gridLayer" mask="url(#gridMask)"></g>
       <g id="customLayer"></g>
+      <g id="safeZoneLayer"></g>
       <g id="mainLayer"></g>
       <g id="hitLayer"></g>
     </svg>
@@ -344,32 +509,45 @@
   <script>
     const SVG_NS = "http://www.w3.org/2000/svg";
     const WORLD = { width: 100, height: 100 };
-    const FONT_STACK = "Arial Black, Arial, Helvetica, sans-serif";
+    const FALLBACK_FONTS = [
+      "univers-next-pro"
+    ];
+    const GENERIC_FONTS = new Set(["serif", "sans-serif", "monospace", "cursive", "fantasy", "system-ui"]);
     const ROTATION_FRICTION = 9.5;
+    const GRID_TEXT = "INDIGO 2026 ";
+    const GRID_LINE_HEIGHT = 1.09;
+    const GRID_REPS_DESKTOP = 7;
+    const GRID_REPS_MOBILE = 3;
+    const GRID_MOBILE_BREAKPOINT = 760;
 
     const els = {
+      clusterInput: document.querySelector("#clusterInput"),
+      addCluster: document.querySelector("#addCluster"),
+      clusterList: document.querySelector("#clusterList"),
       mainText: document.querySelector("#mainText"),
+      fontFamily: document.querySelector("#fontFamily"),
+      fontOptions: document.querySelector("#fontOptions"),
+      fontStatus: document.querySelector("#fontStatus"),
+      fontWeight: document.querySelector("#fontWeight"),
+      letterSpacing: document.querySelector("#letterSpacing"),
+      letterSpacingValue: document.querySelector("#letterSpacingValue"),
       wordSize: document.querySelector("#wordSize"),
       wordSizeValue: document.querySelector("#wordSizeValue"),
       safeZone: document.querySelector("#safeZone"),
       safeZoneValue: document.querySelector("#safeZoneValue"),
+      showSafeZone: document.querySelector("#showSafeZone"),
       edgePct: document.querySelector("#edgePct"),
       edgeValue: document.querySelector("#edgeValue"),
-      gridText: document.querySelector("#gridText"),
-      gridSize: document.querySelector("#gridSize"),
-      gridSizeValue: document.querySelector("#gridSizeValue"),
-      columnGap: document.querySelector("#columnGap"),
-      columnGapValue: document.querySelector("#columnGapValue"),
-      rowGap: document.querySelector("#rowGap"),
-      rowGapValue: document.querySelector("#rowGapValue"),
-      gridSpeed: document.querySelector("#gridSpeed"),
-      gridSpeedValue: document.querySelector("#gridSpeedValue"),
       wordGap: document.querySelector("#wordGap"),
       wordGapValue: document.querySelector("#wordGapValue"),
       floatStrength: document.querySelector("#floatStrength"),
       floatStrengthValue: document.querySelector("#floatStrengthValue"),
+      floatSpeed: document.querySelector("#floatSpeed"),
+      floatSpeedValue: document.querySelector("#floatSpeedValue"),
       rotationAmount: document.querySelector("#rotationAmount"),
       rotationAmountValue: document.querySelector("#rotationAmountValue"),
+      rotationFloat: document.querySelector("#rotationFloat"),
+      rotationFloatValue: document.querySelector("#rotationFloatValue"),
       bounce: document.querySelector("#bounce"),
       bounceValue: document.querySelector("#bounceValue"),
       friction: document.querySelector("#friction"),
@@ -377,22 +555,51 @@
       svgUpload: document.querySelector("#svgUpload"),
       resetWords: document.querySelector("#resetWords"),
       exportSvg: document.querySelector("#exportSvg"),
+      saveDefaults: document.querySelector("#saveDefaults"),
+      saveStatus: document.querySelector("#saveStatus"),
+      toggleControls: document.querySelector("#toggleControls"),
       svg: document.querySelector("#posterSvg"),
+      paper: document.querySelector("#paper"),
       gridLayer: document.querySelector("#gridLayer"),
+      gridMaskBg: document.querySelector("#gridMaskBg"),
+      gridMaskWords: document.querySelector("#gridMaskWords"),
       customLayer: document.querySelector("#customLayer"),
+      safeZoneLayer: document.querySelector("#safeZoneLayer"),
       mainLayer: document.querySelector("#mainLayer"),
       hitLayer: document.querySelector("#hitLayer")
     };
 
+    const rangeControls = [
+      { range: els.letterSpacing, field: els.letterSpacingValue },
+      { range: els.wordSize, field: els.wordSizeValue },
+      { range: els.safeZone, field: els.safeZoneValue },
+      { range: els.edgePct, field: els.edgeValue },
+      { range: els.wordGap, field: els.wordGapValue },
+      { range: els.floatStrength, field: els.floatStrengthValue },
+      { range: els.floatSpeed, field: els.floatSpeedValue },
+      { range: els.rotationAmount, field: els.rotationAmountValue },
+      { range: els.rotationFloat, field: els.rotationFloatValue },
+      { range: els.bounce, field: els.bounceValue },
+      { range: els.friction, field: els.frictionValue }
+    ];
+
     const measureCanvas = document.createElement("canvas");
     const measureCtx = measureCanvas.getContext("2d");
+    const collisionCanvasA = document.createElement("canvas");
+    const collisionCanvasB = document.createElement("canvas");
+    const collisionCtxA = collisionCanvasA.getContext("2d", { willReadFrequently: true });
+    const collisionCtxB = collisionCanvasB.getContext("2d", { willReadFrequently: true });
 
-    let gridGlyphs = [];
     let wordBodies = [];
     let customObjects = [];
     let gridSignatureValue = "";
     let wordSignatureValue = "";
-    let gridOffset = 0;
+    let gridCharData = [];
+    let textClusters = [];
+    let localFontFamilies = FALLBACK_FONTS.slice();
+    let localFontsRequested = false;
+    let lastContainerWidth = 0;
+    let lastContainerHeight = 0;
     let activeBody = null;
     let lastFrame = performance.now();
 
@@ -414,8 +621,27 @@
       return Number(element.value);
     }
 
+    function cssFontFamilyName(name) {
+      const family = (name || "univers-next-pro").trim();
+      if (GENERIC_FONTS.has(family.toLowerCase())) return family;
+      return JSON.stringify(family);
+    }
+
+    function selectedFontStack() {
+      const primary = els.fontFamily.value.trim() || "univers-next-pro";
+      return `${cssFontFamilyName(primary)}, sans-serif`;
+    }
+
+    function fontWeightValue() {
+      return els.fontWeight.value || "900";
+    }
+
+    function letterSpacingValue() {
+      return numberValue(els.letterSpacing);
+    }
+
     function font(size) {
-      return `900 ${size}px ${FONT_STACK}`;
+      return `${fontWeightValue()} ${size}px ${selectedFontStack()}`;
     }
 
     function pct(value) {
@@ -423,21 +649,197 @@
       return `${rounded}%`;
     }
 
-    function tokensFromInput() {
-      const text = els.mainText.value.trim() || "Save the Date";
-      return text.split(/\s+/).filter(Boolean).slice(0, 9);
+    function stepDecimals(step) {
+      const text = String(step || "1");
+      return text.includes(".") ? text.split(".")[1].length : 0;
     }
 
-    function metricsFor(text, size) {
-      measureCtx.font = font(size);
+    function formattedControlValue(control, value = numberValue(control.range)) {
+      const decimals = stepDecimals(control.range.step);
+      return decimals ? value.toFixed(decimals) : String(Math.round(value));
+    }
+
+    function clampControlValue(control, rawValue) {
+      const min = Number(control.range.min);
+      const max = Number(control.range.max);
+      return clamp(Number(rawValue), min, max);
+    }
+
+    function syncFieldFromRange(control) {
+      control.field.value = formattedControlValue(control);
+    }
+
+    function syncRangeFromField(control, force = false) {
+      const raw = control.field.value.trim();
+      const parsed = Number(raw);
+
+      if (!raw || Number.isNaN(parsed)) {
+        if (force) syncFieldFromRange(control);
+        return false;
+      }
+
+      const value = clampControlValue(control, parsed);
+      const formatted = formattedControlValue(control, value);
+      control.range.value = formatted;
+      control.field.value = formatted;
+      return true;
+    }
+
+    function syncWorldToContainer() {
+      const rect = els.svg.getBoundingClientRect();
+      if (!rect.width || !rect.height) return false;
+      if (
+        Math.abs(lastContainerWidth - rect.width) < 0.5 &&
+        Math.abs(lastContainerHeight - rect.height) < 0.5
+      ) {
+        return false;
+      }
+
+      lastContainerWidth = rect.width;
+      lastContainerHeight = rect.height;
+
+      const nextHeight = 100;
+      const nextWidth = Math.max(40, (rect.width / rect.height) * nextHeight);
+      const changed = (
+        Math.abs(WORLD.width - nextWidth) > 0.05 ||
+        Math.abs(WORLD.height - nextHeight) > 0.05
+      );
+
+      WORLD.width = nextWidth;
+      WORLD.height = nextHeight;
+      els.svg.setAttribute("viewBox", `0 0 ${WORLD.width.toFixed(3)} ${WORLD.height.toFixed(3)}`);
+      els.paper.setAttribute("width", WORLD.width.toFixed(3));
+      els.paper.setAttribute("height", WORLD.height.toFixed(3));
+      els.gridMaskBg.setAttribute("width", WORLD.width.toFixed(3));
+      els.gridMaskBg.setAttribute("height", WORLD.height.toFixed(3));
+
+      return changed;
+    }
+
+    function normalizeClusterText(text) {
+      return text.trim().replace(/\s+/g, " ");
+    }
+
+    function parseStoredClusters(value) {
+      const trimmed = (value || "").trim();
+      if (!trimmed) return ["Save", "the", "Date"];
+
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.map((item) => normalizeClusterText(String(item))).filter(Boolean);
+        }
+      } catch (error) {
+        // Legacy files used a plain text field.
+      }
+
+      if (trimmed.includes("|")) {
+        const clusters = trimmed.split("|").map(normalizeClusterText).filter(Boolean);
+        if (clusters.length) return clusters;
+      }
+
+      return trimmed.split(/\s+/).map(normalizeClusterText).filter(Boolean);
+    }
+
+    function serializeClusters() {
+      return JSON.stringify(textClusters);
+    }
+
+    function renderClusterList() {
+      clear(els.clusterList);
+      textClusters.forEach((text, index) => {
+        const chip = document.createElement("div");
+        chip.className = "cluster-chip";
+
+        const label = document.createElement("span");
+        label.textContent = text;
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "x";
+        remove.setAttribute("aria-label", `Remove ${text}`);
+        remove.addEventListener("click", () => removeCluster(index));
+
+        chip.append(label, remove);
+        els.clusterList.appendChild(chip);
+      });
+    }
+
+    function syncClustersToInput() {
+      els.mainText.value = serializeClusters();
+      renderClusterList();
+    }
+
+    function setClusters(clusters, shouldUpdate = true) {
+      textClusters = clusters.map(normalizeClusterText).filter(Boolean).slice(0, 18);
+      syncClustersToInput();
+      if (shouldUpdate) updateFromControls();
+    }
+
+    function addClusterFromInput() {
+      const text = normalizeClusterText(els.clusterInput.value);
+      if (!text) return;
+      setClusters(textClusters.concat(text));
+      els.clusterInput.value = "";
+      els.clusterInput.focus();
+    }
+
+    function removeCluster(index) {
+      setClusters(textClusters.filter((_, itemIndex) => itemIndex !== index));
+    }
+
+    function tokensFromInput() {
+      return textClusters.slice(0, 18);
+    }
+
+    function metricsFor(text, size, spacing = letterSpacingValue(), weight = fontWeightValue()) {
+      measureCtx.font = `${weight} ${size}px ${selectedFontStack()}`;
       const metrics = measureCtx.measureText(text);
+      const chars = [...text];
+      // Use full-string measureText (kerning-aware) then add custom letter-spacing on top
+      const width = Math.max(0, metrics.width + spacing * (chars.length - 1));
       return {
-        width: metrics.width,
-        ascent: metrics.actualBoundingBoxAscent || size * 0.78,
-        descent: metrics.actualBoundingBoxDescent || size * 0.18,
+        width,
+        ascent: Number.isFinite(metrics.actualBoundingBoxAscent) && metrics.actualBoundingBoxAscent > 0 ? metrics.actualBoundingBoxAscent : size * 0.78,
+        descent: Number.isFinite(metrics.actualBoundingBoxDescent) ? metrics.actualBoundingBoxDescent : size * 0.18,
         left: metrics.actualBoundingBoxLeft || 0,
-        right: metrics.actualBoundingBoxRight || metrics.width
+        right: width
       };
+    }
+
+    function computeCharOffsets(text, size) {
+      const chars = [...text];
+      const spacing = letterSpacingValue();
+      measureCtx.font = font(size);
+      return chars.map((char, i) => {
+        const prefix = chars.slice(0, i).join("");
+        const startX = (prefix ? measureCtx.measureText(prefix).width : 0) + spacing * i;
+        const m = measureCtx.measureText(char);
+        return {
+          startX,
+          left: m.actualBoundingBoxLeft || 0,
+          right: m.actualBoundingBoxRight || m.width,
+          ascent: Number.isFinite(m.actualBoundingBoxAscent) && m.actualBoundingBoxAscent > 0 ? m.actualBoundingBoxAscent : size * 0.78,
+          descent: Number.isFinite(m.actualBoundingBoxDescent) ? m.actualBoundingBoxDescent : size * 0.18
+        };
+      });
+    }
+
+    function drawSpacedText(ctx, text, x, y, mode, spacing = letterSpacingValue()) {
+      measureCtx.font = ctx.font;
+      const chars = [...text];
+
+      if (Math.abs(spacing) < 0.001) {
+        ctx[mode](text, x, y);
+        return;
+      }
+
+      // Cumulative prefix measurement gives kerning-aware positions
+      chars.forEach((char, index) => {
+        const prefix = chars.slice(0, index).join("");
+        const charX = x + (prefix.length > 0 ? measureCtx.measureText(prefix).width : 0) + spacing * index;
+        ctx[mode](char, charX, y);
+      });
     }
 
     function fitSize(text, maxWidth, maxHeight, maxSize) {
@@ -446,19 +848,66 @@
       return clamp(Math.min(widthSize, maxHeight, maxSize), 2, maxSize);
     }
 
+    function renderFontOptions() {
+      clear(els.fontOptions);
+      localFontFamilies.forEach((family) => {
+        const option = document.createElement("option");
+        option.value = family;
+        els.fontOptions.appendChild(option);
+      });
+    }
+
+    async function loadLocalFonts() {
+      if (localFontsRequested) return;
+      localFontsRequested = true;
+
+      if (!("queryLocalFonts" in window)) {
+        els.fontStatus.textContent = "Local font access is unavailable in this browser.";
+        return;
+      }
+
+      els.fontStatus.textContent = "Loading local fonts...";
+
+      try {
+        const fonts = await window.queryLocalFonts();
+        const families = [...new Set(fonts.map((fontFace) => fontFace.family).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+        localFontFamilies = [...new Set(FALLBACK_FONTS.concat(families))];
+        renderFontOptions();
+        els.fontStatus.textContent = `${families.length} local fonts available.`;
+      } catch (error) {
+        localFontsRequested = false;
+        els.fontStatus.textContent = "Allow local font access to search installed fonts.";
+      }
+    }
+
     function updateReadouts() {
-      els.wordSizeValue.textContent = pct(numberValue(els.wordSize));
-      els.safeZoneValue.textContent = pct(numberValue(els.safeZone));
-      els.edgeValue.textContent = pct(numberValue(els.edgePct));
-      els.gridSizeValue.textContent = pct(numberValue(els.gridSize));
-      els.columnGapValue.textContent = pct(numberValue(els.columnGap));
-      els.rowGapValue.textContent = pct(numberValue(els.rowGap));
-      els.gridSpeedValue.textContent = pct(numberValue(els.gridSpeed));
-      els.wordGapValue.textContent = pct(numberValue(els.wordGap));
-      els.floatStrengthValue.textContent = pct(numberValue(els.floatStrength));
-      els.rotationAmountValue.textContent = pct(numberValue(els.rotationAmount));
-      els.bounceValue.textContent = pct(numberValue(els.bounce));
-      els.frictionValue.textContent = pct(numberValue(els.friction));
+      rangeControls.forEach(syncFieldFromRange);
+    }
+
+    function applyMarkupDefaults() {
+      [els.fontFamily].forEach((input) => {
+        input.value = input.getAttribute("value") || input.defaultValue || "";
+      });
+
+      setClusters(parseStoredClusters(els.mainText.getAttribute("value") || els.mainText.value), false);
+
+      [els.fontWeight].forEach((select) => {
+        const selected = [...select.options].find((option) => option.defaultSelected) || select.options[0];
+        if (selected) select.value = selected.value;
+      });
+
+      rangeControls.forEach((control) => {
+        const rangeValue = control.range.getAttribute("value") || control.range.defaultValue;
+        const fieldValue = control.field.getAttribute("value") || rangeValue;
+        control.range.value = rangeValue;
+        control.field.value = fieldValue;
+      });
+    }
+
+    function setControlsVisible(isVisible) {
+      document.body.classList.toggle("controls-hidden", !isVisible);
+      els.toggleControls.setAttribute("aria-expanded", String(isVisible));
+      els.toggleControls.textContent = isVisible ? "Hide Controls" : "Show Controls";
     }
 
     function bodyBox(body, pad = 0) {
@@ -491,6 +940,42 @@
       };
     }
 
+    function rotatedBodyBounds(body, pad = 0) {
+      const box = bodyBox(body, pad);
+      const center = bodyCenter(body);
+      const angle = (body.angle || 0) * Math.PI / 180;
+      if (Math.abs(angle) < 0.001) return box;
+
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const corners = [
+        [box.left, box.top],
+        [box.right, box.top],
+        [box.right, box.bottom],
+        [box.left, box.bottom]
+      ].map(([x, y]) => {
+        const dx = x - center.x;
+        const dy = y - center.y;
+        return {
+          x: center.x + dx * cos - dy * sin,
+          y: center.y + dx * sin + dy * cos
+        };
+      });
+      const xs = corners.map((point) => point.x);
+      const ys = corners.map((point) => point.y);
+      const left = Math.min(...xs);
+      const right = Math.max(...xs);
+      const top = Math.min(...ys);
+      const bottom = Math.max(...ys);
+      return { left, top, right, bottom, width: right - left, height: bottom - top };
+    }
+
+    function setBodyCenter(body, x, y) {
+      const center = bodyCenter(body);
+      body.x += x - center.x;
+      body.y += y - center.y;
+    }
+
     function rotatedRectContains(pointX, pointY, body, radius) {
       const box = bodyBox(body);
       const center = bodyCenter(body);
@@ -505,29 +990,66 @@
       );
     }
 
-    function safeZoneBodies() {
-      return wordBodies.concat(customObjects);
+    function safeZoneRadius(body) {
+      const amount = numberValue(els.safeZone) / 100;
+      if (body.kind === "word") return body.size * amount;
+      return Math.max(body.width, body.height) * amount;
     }
 
-    function glyphHitsSafeZone(glyph, x, y, metrics) {
-      const radius = numberValue(els.safeZone);
-      const centerX = x + glyph.width / 2;
-      const centerY = y - metrics.ascent / 2 + metrics.descent / 2;
-      return safeZoneBodies().some((body) => rotatedRectContains(centerX, centerY, body, radius));
+    function collisionRadius(body) {
+      const amount = numberValue(els.wordGap) / 100;
+      if (body.kind === "word") return body.size * amount;
+      return Math.max(body.width, body.height) * amount;
     }
+
+    function prepareMaskContext(ctx) {
+      ctx.fillStyle = "#fff";
+      ctx.strokeStyle = "#fff";
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.miterLimit = 2;
+      ctx.textBaseline = "alphabetic";
+    }
+
+    function drawBodyMask(ctx, body, radius, scale = 1, offsetX = 0, offsetY = 0) {
+      const center = bodyCenter(body);
+      ctx.save();
+      ctx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
+      ctx.translate(center.x, center.y);
+      ctx.rotate((body.angle || 0) * Math.PI / 180);
+      ctx.translate(-center.x, -center.y);
+      ctx.lineWidth = radius * 2;
+
+      if (body.kind === "word") {
+        ctx.font = font(body.size);
+        if (ctx.lineWidth > 0) drawSpacedText(ctx, body.text, body.x, body.y, "strokeText");
+        drawSpacedText(ctx, body.text, body.x, body.y, "fillText");
+      } else {
+        if (ctx.lineWidth > 0) ctx.strokeRect(body.x, body.y, body.width, body.height);
+        ctx.fillRect(body.x, body.y, body.width, body.height);
+      }
+
+      ctx.restore();
+    }
+
 
     function wordSignature() {
       return [
         tokensFromInput().join("|"),
+        els.fontFamily.value,
+        els.fontWeight.value,
+        els.letterSpacing.value,
         els.wordSize.value,
-        els.edgePct.value
+        els.edgePct.value,
+        WORLD.width.toFixed(2),
+        WORLD.height.toFixed(2)
       ].join("|");
     }
 
     function rebuildWords(keepPositions = false) {
       const tokens = tokensFromInput();
       const oldWords = wordBodies;
-      const targetSize = numberValue(els.wordSize);
+      const targetSize = numberValue(els.wordSize) * WORLD.width / 100;
       const edge = numberValue(els.edgePct);
       const band = (WORLD.height - edge * 2) / Math.max(1, tokens.length);
       const maxAngle = rotationMaxDegrees();
@@ -541,7 +1063,7 @@
         const existing = keepPositions ? oldWords[index] : null;
         const x = existing ? existing.x : (WORLD.width - metrics.width) / 2;
         const y = existing ? existing.y : edge + band * index + band * 0.68 + metrics.ascent * 0.2;
-        const mass = Math.max(1, (metrics.width * (metrics.ascent + metrics.descent)) / 70);
+        const mass = Math.max(1, (metrics.width * (metrics.ascent + metrics.descent)) / 95);
         const textNode = svgEl("text", { class: "main-text" });
         const hitNode = svgEl("rect", { class: "hit-box" });
         const word = {
@@ -559,6 +1081,7 @@
           turnPhase: Math.random() * Math.PI * 2,
           size,
           metrics,
+          charOffsets: computeCharOffsets(text, size),
           mass,
           textNode,
           hitNode,
@@ -584,37 +1107,75 @@
 
     function renderCustomObjects() {
       [...els.hitLayer.querySelectorAll(".custom-hit")].forEach((node) => node.remove());
+      [...els.gridMaskWords.querySelectorAll(".mask-custom")].forEach((node) => node.remove());
       clear(els.customLayer);
       customObjects.forEach((customObject) => {
         els.customLayer.appendChild(customObject.imageNode);
         els.hitLayer.appendChild(customObject.hitNode);
+        els.gridMaskWords.appendChild(customObject.maskNode);
       });
     }
 
     function updateWordMetrics() {
       const edge = numberValue(els.edgePct);
       wordBodies.forEach((word) => {
-        word.size = fitSize(word.text, WORLD.width - edge * 2, WORLD.height, numberValue(els.wordSize));
+        word.size = fitSize(word.text, WORLD.width - edge * 2, WORLD.height, numberValue(els.wordSize) * WORLD.width / 100);
         word.metrics = metricsFor(word.text, word.size);
-        word.mass = Math.max(1, (word.metrics.width * (word.metrics.ascent + word.metrics.descent)) / 70);
+        word.charOffsets = computeCharOffsets(word.text, word.size);
+        word.mass = Math.max(1, (word.metrics.width * (word.metrics.ascent + word.metrics.descent)) / 95);
       });
+    }
+
+    function applyWorldChange() {
+      updateWordMetrics();
+      wordBodies.forEach(keepBodyInsideWorld);
+      customObjects.forEach(keepBodyInsideWorld);
+      updateBodyNodes();
+      wordSignatureValue = wordSignature();
+      gridSignatureValue = "";
     }
 
     function rotationMaxDegrees() {
       return numberValue(els.rotationAmount) * 0.36;
     }
 
+    function updateSafeZoneLayer() {
+      clear(els.safeZoneLayer);
+      if (!els.showSafeZone.checked) return;
+      wordBodies.forEach((word) => {
+        if (!word.charOffsets) return;
+        const safeR = safeZoneRadius(word);
+        const center = bodyCenter(word);
+        const rotate = `rotate(${word.angle.toFixed(3)} ${center.x.toFixed(3)} ${center.y.toFixed(3)})`;
+        word.charOffsets.forEach(({ startX, left, right, ascent, descent }) => {
+          els.safeZoneLayer.appendChild(svgEl("rect", {
+            x: (word.x + startX - left - safeR).toFixed(3),
+            y: (word.y - ascent - safeR).toFixed(3),
+            width: (left + right + safeR * 2).toFixed(3),
+            height: (ascent + descent + safeR * 2).toFixed(3),
+            fill: "rgba(255, 50, 80, 0.12)",
+            stroke: "rgba(255, 50, 80, 0.55)",
+            "stroke-width": "0.2",
+            transform: rotate
+          }));
+        });
+      });
+    }
+
     function updateBodyNodes() {
       const maxAngle = rotationMaxDegrees();
       wordBodies.forEach((word) => {
         word.angle = clamp(word.angle, -maxAngle, maxAngle);
-        const box = bodyBox(word, 1);
+        const box = bodyBox(word, Math.max(1, collisionRadius(word)));
         const center = bodyCenter(word);
         const rotate = `rotate(${word.angle.toFixed(3)} ${center.x.toFixed(3)} ${center.y.toFixed(3)})`;
 
         word.textNode.setAttribute("x", word.x.toFixed(3));
         word.textNode.setAttribute("y", word.y.toFixed(3));
         word.textNode.setAttribute("font-size", word.size.toFixed(3));
+        word.textNode.setAttribute("font-family", selectedFontStack());
+        word.textNode.setAttribute("font-weight", fontWeightValue());
+        word.textNode.setAttribute("letter-spacing", letterSpacingValue().toFixed(3));
         word.textNode.setAttribute("transform", rotate);
         word.textNode.classList.toggle("dragging", word.dragging);
 
@@ -624,6 +1185,7 @@
         word.hitNode.setAttribute("height", box.height.toFixed(3));
         word.hitNode.setAttribute("transform", rotate);
         word.hitNode.classList.toggle("dragging", word.dragging);
+
       });
 
       customObjects.forEach((object) => {
@@ -640,92 +1202,153 @@
         object.hitNode.setAttribute("height", object.height.toFixed(3));
         object.hitNode.setAttribute("transform", rotate);
         object.hitNode.classList.toggle("dragging", object.dragging);
+
+        const safeR = safeZoneRadius(object);
+        object.maskNode.setAttribute("x", (object.x - safeR).toFixed(3));
+        object.maskNode.setAttribute("y", (object.y - safeR).toFixed(3));
+        object.maskNode.setAttribute("width", (object.width + safeR * 2).toFixed(3));
+        object.maskNode.setAttribute("height", (object.height + safeR * 2).toFixed(3));
+        object.maskNode.setAttribute("transform", rotate);
       });
+      updateSafeZoneLayer();
+    }
+
+    function gridReps() {
+      return window.innerWidth <= GRID_MOBILE_BREAKPOINT ? GRID_REPS_MOBILE : GRID_REPS_DESKTOP;
     }
 
     function gridSignature() {
       return [
-        els.gridText.value,
-        els.gridSize.value,
-        els.columnGap.value,
-        els.rowGap.value
+        gridReps(),
+        els.fontFamily.value,
+        WORLD.width.toFixed(2),
+        WORLD.height.toFixed(2)
       ].join("|");
-    }
-
-    function phraseGlyphs(text, size) {
-      const glyphs = [];
-      let offset = 0;
-      measureCtx.font = font(size);
-
-      [...text].forEach((char) => {
-        const metrics = metricsFor(char, size);
-        const advance = measureCtx.measureText(char).width;
-        if (char !== " ") {
-          glyphs.push({ char, offset, width: metrics.width || advance });
-        }
-        offset += advance;
-      });
-
-      return { glyphs, width: offset };
     }
 
     function rebuildGrid() {
       clear(els.gridLayer);
-      gridGlyphs = [];
-      gridOffset = 0;
+      gridCharData = [];
 
-      const text = els.gridText.value.trim().toUpperCase() || "INDIGO 2026";
-      const size = numberValue(els.gridSize);
-      const phrase = phraseGlyphs(text, size);
-      const metrics = metricsFor(text, size);
-      const cellW = Math.max(phrase.width + numberValue(els.columnGap), size);
-      const cellH = Math.max(metrics.ascent + metrics.descent + numberValue(els.rowGap), size * 0.6);
-      const rows = Math.ceil((WORLD.height + cellH) / cellH);
-      const cols = Math.ceil((WORLD.width + cellW * 2) / cellW);
+      const reps = gridReps();
+      const refWidth = metricsFor(GRID_TEXT, 100, -1, "700").width;
+      const size = refWidth > 0 ? (WORLD.width * 100) / (refWidth * reps) : 3;
+      const spacing = -0.01 * size;
 
-      for (let row = 0; row < rows; row += 1) {
-        for (let col = -1; col < cols; col += 1) {
-          phrase.glyphs.forEach((glyph) => {
-            const node = svgEl("text", {
-              class: "grid-glyph",
-              "font-size": size.toFixed(3)
-            });
-            node.textContent = glyph.char;
-            els.gridLayer.appendChild(node);
-            gridGlyphs.push({ row, col, glyph, node });
-          });
-        }
+      const metrics = metricsFor(GRID_TEXT, size, spacing, "700");
+      const phraseWidth = metrics.width;
+      const cellH = size * GRID_LINE_HEIGHT;
+      const rows = Math.ceil(WORLD.height / cellH) + 1;
+      const repsNeeded = Math.ceil(WORLD.width / phraseWidth) + 2;
+      const rowContent = GRID_TEXT.repeat(repsNeeded);
+      const fragment = document.createDocumentFragment();
+
+      measureCtx.font = `700 ${size}px ${selectedFontStack()}`;
+      const halfAscent = metrics.ascent / 2;
+      let charX = 0;
+      const row0Chars = [];
+
+      for (let i = 0; i < rowContent.length; i++) {
+        const cw = measureCtx.measureText(rowContent[i]).width;
+        row0Chars.push({ cx: charX + cw / 2, startX: charX, cw });
+        charX += cw + spacing;
       }
 
+      for (let row = 0; row < rows; row += 1) {
+        const y = row * cellH + metrics.ascent;
+        const cy = y - halfAscent;
+        const node = svgEl("text", {
+          class: "grid-glyph",
+          "font-size": size.toFixed(3),
+          "font-family": selectedFontStack(),
+          "font-weight": "700",
+          x: "0",
+          y: y.toFixed(3)
+        });
+        for (let i = 0; i < rowContent.length; i++) {
+          const tspan = document.createElementNS(SVG_NS, "tspan");
+          tspan.textContent = rowContent[i];
+          tspan.setAttribute("x", row0Chars[i].startX.toFixed(3));
+          node.appendChild(tspan);
+          gridCharData.push({ tspan, x: row0Chars[i].cx, y: cy, hidden: false });
+        }
+        fragment.appendChild(node);
+      }
+
+      els.gridLayer.appendChild(fragment);
       gridSignatureValue = gridSignature();
+    }
+
+    function updateGridCharVisibility() {
+      if (!gridCharData.length) return;
+      const bodies = physicsBodies();
+
+      const checks = bodies.map((body) => {
+        const safeR = safeZoneRadius(body);
+        const center = bodyCenter(body);
+        const angle = (body.angle || 0) * Math.PI / 180;
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        if (body.kind === "word" && body.charOffsets) {
+          const charBoxes = body.charOffsets.map(({ startX, left, right, ascent, descent }) => ({
+            left: body.x + startX - left - safeR,
+            top: body.y - ascent - safeR,
+            right: body.x + startX + right + safeR,
+            bottom: body.y + descent + safeR
+          }));
+          return { charBoxes, center, cos, sin };
+        }
+        const box = bodyBox(body, safeR);
+        return { box, center, cos, sin };
+      });
+
+      for (const char of gridCharData) {
+        let hidden = false;
+        for (const bc of checks) {
+          const dx = char.x - bc.center.x;
+          const dy = char.y - bc.center.y;
+          const lx = bc.center.x + bc.cos * dx + bc.sin * dy;
+          const ly = bc.center.y - bc.sin * dx + bc.cos * dy;
+          if (bc.charBoxes) {
+            for (const box of bc.charBoxes) {
+              if (lx >= box.left && lx <= box.right && ly >= box.top && ly <= box.bottom) {
+                hidden = true;
+                break;
+              }
+            }
+          } else if (lx >= bc.box.left && lx <= bc.box.right && ly >= bc.box.top && ly <= bc.box.bottom) {
+            hidden = true;
+          }
+          if (hidden) break;
+        }
+        if (hidden !== char.hidden) {
+          char.hidden = hidden;
+          char.tspan.style.visibility = hidden ? "hidden" : "";
+        }
+      }
     }
 
     function layoutGrid() {
       if (gridSignatureValue !== gridSignature()) rebuildGrid();
+      updateGridCharVisibility();
+    }
 
-      const text = els.gridText.value.trim().toUpperCase() || "INDIGO 2026";
-      const size = numberValue(els.gridSize);
-      const phrase = phraseGlyphs(text, size);
-      const metrics = metricsFor(text, size);
-      const edge = numberValue(els.edgePct);
-      const cellW = Math.max(phrase.width + numberValue(els.columnGap), size);
-      const cellH = Math.max(metrics.ascent + metrics.descent + numberValue(els.rowGap), size * 0.6);
+    function physicsBodies() {
+      return wordBodies.concat(customObjects);
+    }
 
-      gridGlyphs.forEach((tile) => {
-        const x = tile.col * cellW + edge - gridOffset + tile.glyph.offset;
-        const y = tile.row * cellH + metrics.ascent + edge;
-        const hidden = glyphHitsSafeZone(tile.glyph, x, y, metrics);
-        tile.node.setAttribute("font-size", size.toFixed(3));
-        tile.node.setAttribute("x", x.toFixed(3));
-        tile.node.setAttribute("y", y.toFixed(3));
-        tile.node.style.display = hidden ? "none" : "";
-      });
+    function clampBodySpeed(body) {
+      const maxSpeed = 70;
+      const speed = Math.hypot(body.vx || 0, body.vy || 0);
+      if (speed <= maxSpeed) return;
+      body.vx = ((body.vx || 0) / speed) * maxSpeed;
+      body.vy = ((body.vy || 0) / speed) * maxSpeed;
     }
 
     function keepBodyInsideWorld(body) {
       const edge = numberValue(els.edgePct);
       const bounce = numberValue(els.bounce) / 100;
-      const box = bodyBox(body, numberValue(els.wordGap) / 2);
+      const box = rotatedBodyBounds(body, collisionRadius(body));
 
       if (box.left < edge) {
         body.x += edge - box.left;
@@ -745,10 +1368,22 @@
       }
     }
 
-    function resolveWordCollision(a, b) {
-      const pad = numberValue(els.wordGap) / 2;
-      const aBox = bodyBox(a, pad);
-      const bBox = bodyBox(b, pad);
+    function resizeCollisionCanvas(width, height) {
+      if (collisionCanvasA.width !== width || collisionCanvasA.height !== height) {
+        collisionCanvasA.width = width;
+        collisionCanvasA.height = height;
+      }
+      if (collisionCanvasB.width !== width || collisionCanvasB.height !== height) {
+        collisionCanvasB.width = width;
+        collisionCanvasB.height = height;
+      }
+    }
+
+    function maskedCollision(a, b) {
+      const radiusA = collisionRadius(a);
+      const radiusB = collisionRadius(b);
+      const aBox = rotatedBodyBounds(a, radiusA);
+      const bBox = rotatedBodyBounds(b, radiusB);
 
       if (
         aBox.right <= bBox.left ||
@@ -756,55 +1391,118 @@
         aBox.bottom <= bBox.top ||
         aBox.top >= bBox.bottom
       ) {
-        return;
+        return null;
       }
+
+      const unionLeft = Math.min(aBox.left, bBox.left) - 0.35;
+      const unionTop = Math.min(aBox.top, bBox.top) - 0.35;
+      const unionRight = Math.max(aBox.right, bBox.right) + 0.35;
+      const unionBottom = Math.max(aBox.bottom, bBox.bottom) + 0.35;
+      const unionWidth = Math.max(0.1, unionRight - unionLeft);
+      const unionHeight = Math.max(0.1, unionBottom - unionTop);
+      const scale = clamp(300 / Math.max(unionWidth, unionHeight), 2.6, 6);
+      const width = Math.max(2, Math.ceil(unionWidth * scale));
+      const height = Math.max(2, Math.ceil(unionHeight * scale));
+
+      if (width * height > 180000) return null;
+
+      resizeCollisionCanvas(width, height);
+      collisionCtxA.setTransform(1, 0, 0, 1, 0, 0);
+      collisionCtxB.setTransform(1, 0, 0, 1, 0, 0);
+      collisionCtxA.clearRect(0, 0, width, height);
+      collisionCtxB.clearRect(0, 0, width, height);
+      prepareMaskContext(collisionCtxA);
+      prepareMaskContext(collisionCtxB);
+
+      const offsetX = -unionLeft * scale;
+      const offsetY = -unionTop * scale;
+      drawBodyMask(collisionCtxA, a, radiusA, scale, offsetX, offsetY);
+      drawBodyMask(collisionCtxB, b, radiusB, scale, offsetX, offsetY);
+
+      const pixelsA = collisionCtxA.getImageData(0, 0, width, height).data;
+      const pixelsB = collisionCtxB.getImageData(0, 0, width, height).data;
+      const stride = width * height > 60000 ? 2 : 1;
+      let hits = 0;
+      let sumX = 0;
+      let sumY = 0;
+
+      for (let y = 0; y < height; y += stride) {
+        for (let x = 0; x < width; x += stride) {
+          const index = (y * width + x) * 4 + 3;
+          if (pixelsA[index] > 18 && pixelsB[index] > 18) {
+            hits += 1;
+            sumX += x;
+            sumY += y;
+          }
+        }
+      }
+
+      if (!hits) return null;
 
       const aCenter = bodyCenter(a);
       const bCenter = bodyCenter(b);
-      const overlapX = Math.min(aBox.right - bBox.left, bBox.right - aBox.left);
-      const overlapY = Math.min(aBox.bottom - bBox.top, bBox.bottom - aBox.top);
-      let nx = 0;
-      let ny = 0;
-      let separation = 0;
+      let nx = bCenter.x - aCenter.x;
+      let ny = bCenter.y - aCenter.y;
+      const length = Math.hypot(nx, ny) || 1;
+      nx /= length;
+      ny /= length;
 
-      if (overlapX < overlapY) {
-        nx = aCenter.x < bCenter.x ? -1 : 1;
-        separation = overlapX;
-      } else {
-        ny = aCenter.y < bCenter.y ? -1 : 1;
-        separation = overlapY;
-      }
+      const contactX = unionLeft + (sumX / hits) / scale;
+      const contactY = unionTop + (sumY / hits) / scale;
+      const contactDistance = Math.hypot(contactX - aCenter.x, contactY - aCenter.y);
+      const penetration = clamp(Math.sqrt(hits) * stride / scale * 0.18 + contactDistance * 0.002, 0.08, 3.6);
+      return { nx, ny, penetration };
+    }
+
+    function resolveWordCollision(a, b) {
+      const collision = maskedCollision(a, b);
+      if (!collision) return;
+      const { nx, ny, penetration } = collision;
 
       const invA = a.dragging ? 0 : 1 / a.mass;
       const invB = b.dragging ? 0 : 1 / b.mass;
       const invSum = invA + invB;
       if (invSum === 0) return;
 
-      const correction = separation + 0.08;
-      a.x += nx * correction * (invA / invSum);
-      a.y += ny * correction * (invA / invSum);
-      b.x -= nx * correction * (invB / invSum);
-      b.y -= ny * correction * (invB / invSum);
+      const correction = penetration + 0.04;
+      a.x -= nx * correction * (invA / invSum);
+      a.y -= ny * correction * (invA / invSum);
+      b.x += nx * correction * (invB / invSum);
+      b.y += ny * correction * (invB / invSum);
 
-      const relativeVx = a.vx - b.vx;
-      const relativeVy = a.vy - b.vy;
+      const relativeVx = (b.vx || 0) - (a.vx || 0);
+      const relativeVy = (b.vy || 0) - (a.vy || 0);
       const velocityAlongNormal = relativeVx * nx + relativeVy * ny;
-      if (velocityAlongNormal > 0) return;
+      const isDrivenContact = a.dragging || b.dragging;
+      if (velocityAlongNormal > 0 && !isDrivenContact) return;
 
       const bounce = numberValue(els.bounce) / 100;
-      const impulse = (-(1 + bounce) * velocityAlongNormal) / invSum;
-      a.vx += impulse * invA * nx;
-      a.vy += impulse * invA * ny;
-      b.vx -= impulse * invB * nx;
-      b.vy -= impulse * invB * ny;
+      const closingSpeed = Math.max(0, -velocityAlongNormal);
+      const aVelocityN = (a.vx || 0) * nx + (a.vy || 0) * ny;
+      const bVelocityN = (b.vx || 0) * nx + (b.vy || 0) * ny;
+      const drivenSpeed = Math.max(
+        a.dragging ? aVelocityN : 0,
+        b.dragging ? -bVelocityN : 0,
+        0
+      );
+      const overlapBoost = isDrivenContact ? Math.min(26, penetration * 8) : Math.min(5, penetration * 1.5);
+      const hitSpeed = Math.max(closingSpeed, drivenSpeed, overlapBoost);
+      const impulse = ((1 + bounce) * hitSpeed + overlapBoost) / invSum;
+      a.vx -= impulse * invA * nx;
+      a.vy -= impulse * invA * ny;
+      b.vx += impulse * invB * nx;
+      b.vy += impulse * invB * ny;
       a.av += impulse * invA * 0.04 * (ny || -nx);
       b.av -= impulse * invB * 0.04 * (ny || -nx);
+      clampBodySpeed(a);
+      clampBodySpeed(b);
     }
 
     function applyFloat(word, dt) {
       if (word.dragging) return;
       const strength = numberValue(els.floatStrength);
-      const maxSpeed = 2.4 + strength * 0.4;
+      const targetSpeed = numberValue(els.floatSpeed);
+      if (strength <= 0 || targetSpeed <= 0) return;
 
       word.wanderTimer -= dt;
       if (word.wanderTimer <= 0) {
@@ -812,18 +1510,16 @@
         word.wanderAngle += (Math.random() - 0.5) * Math.PI * 1.4;
       }
 
-      word.vx += Math.cos(word.wanderAngle) * strength * dt * 0.12;
-      word.vy += Math.sin(word.wanderAngle) * strength * dt * 0.12;
-
       const speed = Math.hypot(word.vx, word.vy);
-      if (speed > maxSpeed) {
-        word.vx = (word.vx / speed) * maxSpeed;
-        word.vy = (word.vy / speed) * maxSpeed;
-      }
+      const influence = clamp(1 - speed / Math.max(targetSpeed * 2.8, 0.1), 0, 1);
+      const acceleration = strength * (0.08 + targetSpeed * 0.018) * influence;
+      word.vx += Math.cos(word.wanderAngle) * acceleration * dt;
+      word.vy += Math.sin(word.wanderAngle) * acceleration * dt;
     }
 
     function applyRotation(word, dt, now) {
       const maxAngle = rotationMaxDegrees();
+      const rotationFloat = numberValue(els.rotationFloat);
       if (maxAngle <= 0) {
         word.angle = 0;
         word.av = 0;
@@ -831,7 +1527,7 @@
       }
 
       const wave = Math.sin(now * 0.00018 + word.turnPhase);
-      word.av += wave * maxAngle * dt * 0.035;
+      word.av += wave * maxAngle * rotationFloat * dt * 0.006;
       word.av *= Math.exp(-ROTATION_FRICTION * dt);
       word.angle += word.av * dt;
 
@@ -843,26 +1539,30 @@
 
     function solvePhysics(dt, now) {
       const damping = Math.exp(-numberValue(els.friction) * dt);
+      const bodies = physicsBodies();
 
       wordBodies.forEach((word) => {
         applyFloat(word, dt);
         applyRotation(word, dt, now);
-
-        if (!word.dragging) {
-          word.x += word.vx * dt;
-          word.y += word.vy * dt;
-          word.vx *= damping;
-          word.vy *= damping;
-        }
       });
 
-      for (let iteration = 0; iteration < 5; iteration += 1) {
-        for (let i = 0; i < wordBodies.length; i += 1) {
-          for (let j = i + 1; j < wordBodies.length; j += 1) {
-            resolveWordCollision(wordBodies[i], wordBodies[j]);
+      bodies.forEach((body) => {
+        if (body.dragging) return;
+        body.x += (body.vx || 0) * dt;
+        body.y += (body.vy || 0) * dt;
+        body.vx = (body.vx || 0) * damping;
+        body.vy = (body.vy || 0) * damping;
+        clampBodySpeed(body);
+      });
+
+      const iterations = bodies.length > 10 ? 1 : bodies.length > 6 ? 2 : 3;
+      for (let iteration = 0; iteration < iterations; iteration += 1) {
+        for (let i = 0; i < bodies.length; i += 1) {
+          for (let j = i + 1; j < bodies.length; j += 1) {
+            resolveWordCollision(bodies[i], bodies[j]);
           }
         }
-        wordBodies.forEach(keepBodyInsideWorld);
+        bodies.forEach(keepBodyInsideWorld);
       }
     }
 
@@ -917,6 +1617,7 @@
     }
 
     function updateFromControls() {
+      syncWorldToContainer();
       updateReadouts();
       if (wordSignatureValue !== wordSignature()) {
         rebuildWords(true);
@@ -937,10 +1638,10 @@
       reader.addEventListener("load", () => {
         const object = {
           kind: "svg",
-          x: 12,
-          y: 84,
-          width: 76,
-          height: 8,
+          x: WORLD.width * 0.12,
+          y: WORLD.height * 0.84,
+          width: WORLD.width * 0.76,
+          height: WORLD.height * 0.08,
           vx: 0,
           vy: 0,
           angle: -2.5,
@@ -955,6 +1656,9 @@
           }),
           hitNode: svgEl("rect", {
             class: "custom-hit"
+          }),
+          maskNode: svgEl("rect", {
+            class: "mask-custom"
           })
         };
         object.hitNode.addEventListener("pointerdown", (pointerEvent) => startDrag(pointerEvent, object));
@@ -981,13 +1685,114 @@
       URL.revokeObjectURL(url);
     }
 
+    async function sourceHtml() {
+      try {
+        const response = await fetch(location.href, { cache: "no-store" });
+        if (response.ok) return response.text();
+      } catch (error) {
+        // Browsers may block fetching file:// pages; fall back to the current DOM.
+      }
+
+      const clone = document.documentElement.cloneNode(true);
+      clone.querySelector("#gridLayer")?.replaceChildren();
+      clone.querySelector("#customLayer")?.replaceChildren();
+      clone.querySelector("#mainLayer")?.replaceChildren();
+      clone.querySelector("#hitLayer")?.replaceChildren();
+      clone.querySelector("#posterSvg")?.setAttribute("viewBox", "0 0 100 100");
+      clone.querySelector("#paper")?.setAttribute("width", "100");
+      clone.querySelector("#paper")?.setAttribute("height", "100");
+      clone.querySelector("body")?.classList.remove("controls-hidden");
+      clone.querySelector("#toggleControls")?.setAttribute("aria-expanded", "true");
+      if (clone.querySelector("#toggleControls")) clone.querySelector("#toggleControls").textContent = "Hide Controls";
+      return `<!doctype html>\n${clone.outerHTML}\n`;
+    }
+
+    function htmlWithCurrentDefaults(html) {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const ids = [
+        "mainText",
+        "fontFamily",
+        "fontWeight",
+        ...rangeControls.flatMap((control) => [control.range.id, control.field.id])
+      ];
+
+      ids.forEach((id) => {
+        const sourceInput = doc.getElementById(id);
+        const liveInput = document.getElementById(id);
+        if (!sourceInput || !liveInput) return;
+        if (sourceInput.tagName === "SELECT") {
+          [...sourceInput.options].forEach((option) => {
+            option.toggleAttribute("selected", option.value === liveInput.value);
+          });
+        } else {
+          sourceInput.setAttribute("value", liveInput.value);
+        }
+      });
+
+      doc.getElementById("gridLayer")?.replaceChildren();
+      doc.getElementById("customLayer")?.replaceChildren();
+      doc.getElementById("mainLayer")?.replaceChildren();
+      doc.getElementById("hitLayer")?.replaceChildren();
+      doc.getElementById("posterSvg")?.setAttribute("viewBox", "0 0 100 100");
+      doc.getElementById("paper")?.setAttribute("width", "100");
+      doc.getElementById("paper")?.setAttribute("height", "100");
+      doc.body?.classList.remove("controls-hidden");
+      doc.getElementById("toggleControls")?.setAttribute("aria-expanded", "true");
+      if (doc.getElementById("toggleControls")) doc.getElementById("toggleControls").textContent = "Hide Controls";
+
+      return `<!doctype html>\n${doc.documentElement.outerHTML}\n`;
+    }
+
+    function downloadHtml(html, filename) {
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function saveDefaultsToHtml() {
+      els.saveDefaults.disabled = true;
+      els.saveStatus.textContent = "Preparing updated HTML...";
+
+      try {
+        const html = htmlWithCurrentDefaults(await sourceHtml());
+        const filename = location.pathname.split("/").filter(Boolean).pop() || "index.html";
+
+        if ("showSaveFilePicker" in window) {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [
+              {
+                description: "HTML file",
+                accept: { "text/html": [".html", ".htm"] }
+              }
+            ]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(html);
+          await writable.close();
+          els.saveStatus.textContent = "Defaults saved to the selected HTML file.";
+        } else {
+          downloadHtml(html, filename);
+          els.saveStatus.textContent = "Downloaded an HTML file with these defaults.";
+        }
+      } catch (error) {
+        els.saveStatus.textContent = error.name === "AbortError"
+          ? "Save cancelled."
+          : "Could not save directly; try opening this in Chrome or use the downloaded file fallback.";
+      } finally {
+        els.saveDefaults.disabled = false;
+      }
+    }
+
     function animate(now) {
+      const worldChanged = syncWorldToContainer();
+      if (worldChanged) applyWorldChange();
       const dt = Math.min(0.033, (now - lastFrame) / 1000);
       lastFrame = now;
-      const size = numberValue(els.gridSize);
-      const phrase = phraseGlyphs(els.gridText.value.trim().toUpperCase() || "INDIGO 2026", size);
-      const cellW = Math.max(phrase.width + numberValue(els.columnGap), size);
-      gridOffset = (gridOffset + numberValue(els.gridSpeed) * dt) % cellW;
       solvePhysics(dt, now);
       layoutGrid();
       updateBodyNodes();
@@ -995,18 +1800,17 @@
     }
 
     [
-      els.mainText,
+      els.fontFamily,
+      els.fontWeight,
+      els.letterSpacing,
       els.wordSize,
       els.safeZone,
       els.edgePct,
-      els.gridText,
-      els.gridSize,
-      els.columnGap,
-      els.rowGap,
-      els.gridSpeed,
       els.wordGap,
       els.floatStrength,
+      els.floatSpeed,
       els.rotationAmount,
+      els.rotationFloat,
       els.bounce,
       els.friction
     ].forEach((element) => {
@@ -1014,17 +1818,54 @@
       element.addEventListener("change", updateFromControls);
     });
 
+    els.clusterInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      addClusterFromInput();
+    });
+    els.addCluster.addEventListener("click", addClusterFromInput);
+    els.fontFamily.addEventListener("pointerdown", loadLocalFonts);
+    els.fontFamily.addEventListener("focus", () => {
+      if (!localFontsRequested) loadLocalFonts();
+    });
+
+    rangeControls.forEach((control) => {
+      control.field.addEventListener("input", () => {
+        if (syncRangeFromField(control)) updateFromControls();
+      });
+      control.field.addEventListener("change", () => {
+        syncRangeFromField(control, true);
+        updateFromControls();
+      });
+    });
+
     document.addEventListener("pointermove", moveDrag);
     document.addEventListener("pointerup", endDrag);
     document.addEventListener("pointercancel", endDrag);
+    els.showSafeZone.addEventListener("change", updateBodyNodes);
     els.svgUpload.addEventListener("change", handleSvgUpload);
     els.resetWords.addEventListener("click", resetWords);
     els.exportSvg.addEventListener("click", exportSvg);
+    els.saveDefaults.addEventListener("click", saveDefaultsToHtml);
+    els.toggleControls.addEventListener("click", () => {
+      setControlsVisible(document.body.classList.contains("controls-hidden"));
+    });
 
+    renderFontOptions();
+    applyMarkupDefaults();
+    setControlsVisible(false);
+    syncWorldToContainer();
     updateReadouts();
     rebuildGrid();
     rebuildWords(false);
     requestAnimationFrame(animate);
+
+    document.fonts.ready.then(() => {
+      updateWordMetrics();
+      wordBodies.forEach(keepBodyInsideWorld);
+      gridSignatureValue = "";
+      updateBodyNodes();
+    });
   </script>
 </body>
 </html>
