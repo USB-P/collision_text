@@ -360,52 +360,13 @@
   <aside id="controlsPanel" class="controls">
     <h1>Collision Text Poster</h1>
 
-    <div class="control">
-      <label for="clusterInput">Text clusters</label>
-      <div class="cluster-row">
-        <input id="clusterInput" type="text" placeholder="Add a word or phrase">
-        <button id="addCluster" type="button" aria-label="Add text cluster">+</button>
-      </div>
-      <div id="clusterList" class="cluster-list" aria-label="Text clusters"></div>
-      <input id="mainText" type="hidden" value='["Slop","till","You","Drop"]'>
-    </div>
-
-    <div class="section-title">Typography</div>
-
-    <div class="control">
-      <label for="fontFamily">Font</label>
-      <input id="fontFamily" type="search" list="fontOptions" value="univers-next-pro" autocomplete="off" spellcheck="false">
-      <datalist id="fontOptions"></datalist>
-      <div id="fontStatus" class="font-status" aria-live="polite"></div>
-    </div>
-
-    <div class="control">
-      <label for="fontWeight">Weight</label>
-      <select id="fontWeight">
-        <option value="400">400</option>
-        <option value="500">500</option>
-        <option value="600">600</option>
-        <option value="700" selected>700</option>
-        <option value="800">800</option>
-        <option value="900">900</option>
-      </select>
-    </div>
-
-    <div class="control">
-      <label for="letterSpacing">Letter spacing</label>
-      <div class="range-row">
-        <input id="letterSpacing" type="range" min="-2" max="6" step="0.1" value="0">
-        <input id="letterSpacingValue" class="value number-value" type="number" min="-2" max="6" step="0.1" value="0" aria-label="Letter spacing value">
-      </div>
-    </div>
-
-    <div class="control">
-      <label for="wordSize">Word size</label>
-      <div class="range-row">
-        <input id="wordSize" type="range" min="6" max="28" step="0.1" value="18.1">
-        <input id="wordSizeValue" class="value number-value" type="number" min="6" max="28" step="0.1" value="18.1" aria-label="Word size value">
-      </div>
-    </div>
+    <input type="hidden" id="mainText" value='["Slop","till","You","Drop"]'>
+    <input type="hidden" id="fontFamily" value="univers-next-pro">
+    <input type="hidden" id="fontWeight" value="700">
+    <input type="hidden" id="letterSpacing" value="0">
+    <input type="hidden" id="letterSpacingValue" value="0">
+    <input type="hidden" id="wordSize" value="18.1">
+    <input type="hidden" id="wordSizeValue" value="18.1">
 
     <div class="control">
       <label for="safeZone">Safe zone</label>
@@ -421,19 +382,8 @@
       </label>
     </div>
 
-    <div class="control">
-      <label for="edgePct">Canvas edge</label>
-      <div class="range-row">
-        <input id="edgePct" type="range" min="0" max="10" step="0.1" value="1">
-        <input id="edgeValue" class="value number-value" type="number" min="0" max="10" step="0.1" value="1" aria-label="Canvas edge value">
-      </div>
-      <label for="showEdgePadding" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-transform:none;font-weight:400;font-size:12px;color:#6b665f;">
-        <input id="showEdgePadding" type="checkbox"> Show edge padding overlay
-      </label>
-      <label for="showOuterPadding" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-transform:none;font-weight:400;font-size:12px;color:#6b665f;">
-        <input id="showOuterPadding" type="checkbox"> Show outer padding
-      </label>
-    </div>
+    <input type="hidden" id="edgePct" value="1">
+    <input type="hidden" id="edgeValue" value="1">
 
     <div class="section-title">Word Physics</div>
 
@@ -532,7 +482,6 @@
       <g id="accentLayer"></g>
       <g id="collisionGapLayer"></g>
       <g id="safeZoneLayer"></g>
-      <g id="edgePaddingLayer"></g>
       <g id="hitLayer"></g>
     </svg>
   </main>
@@ -552,13 +501,8 @@
     const GRID_MOBILE_BREAKPOINT = 760;
 
     const els = {
-      clusterInput: document.querySelector("#clusterInput"),
-      addCluster: document.querySelector("#addCluster"),
-      clusterList: document.querySelector("#clusterList"),
       mainText: document.querySelector("#mainText"),
       fontFamily: document.querySelector("#fontFamily"),
-      fontOptions: document.querySelector("#fontOptions"),
-      fontStatus: document.querySelector("#fontStatus"),
       fontWeight: document.querySelector("#fontWeight"),
       letterSpacing: document.querySelector("#letterSpacing"),
       letterSpacingValue: document.querySelector("#letterSpacingValue"),
@@ -598,19 +542,13 @@
       customLayer: document.querySelector("#customLayer"),
       collisionGapLayer: document.querySelector("#collisionGapLayer"),
       safeZoneLayer: document.querySelector("#safeZoneLayer"),
-      edgePaddingLayer: document.querySelector("#edgePaddingLayer"),
       mainLayer: document.querySelector("#mainLayer"),
       accentLayer: document.querySelector("#accentLayer"),
-      hitLayer: document.querySelector("#hitLayer"),
-      showEdgePadding: document.querySelector("#showEdgePadding"),
-      showOuterPadding: document.querySelector("#showOuterPadding")
+      hitLayer: document.querySelector("#hitLayer")
     };
 
     const rangeControls = [
-      { range: els.letterSpacing, field: els.letterSpacingValue },
-      { range: els.wordSize, field: els.wordSizeValue },
       { range: els.safeZone, field: els.safeZoneValue },
-      { range: els.edgePct, field: els.edgeValue },
       { range: els.wordGap, field: els.wordGapValue },
       { range: els.floatStrength, field: els.floatStrengthValue },
       { range: els.floatSpeed, field: els.floatSpeedValue },
@@ -806,6 +744,7 @@
     }
 
     function renderClusterList() {
+      if (!els.clusterList) return;
       clear(els.clusterList);
       textClusters.forEach((text, index) => {
         const chip = document.createElement("div");
@@ -950,11 +889,6 @@
       });
 
       setClusters(parseStoredClusters(els.mainText.getAttribute("value") || els.mainText.value), false);
-
-      [els.fontWeight].forEach((select) => {
-        const selected = [...select.options].find((option) => option.defaultSelected) || select.options[0];
-        if (selected) select.value = selected.value;
-      });
 
       rangeControls.forEach((control) => {
         const rangeValue = control.range.getAttribute("value") || control.range.defaultValue;
@@ -1400,23 +1334,6 @@
       });
     }
 
-    function updateEdgePaddingLayer() {
-      clear(els.edgePaddingLayer);
-      if (!els.showEdgePadding.checked) return;
-      const edge = numberValue(els.edgePct);
-      if (edge <= 0) return;
-      const W = WORLD.width, H = WORLD.height;
-      const inner = W - edge * 2, innerH = H - edge * 2;
-      // Even-odd path: outer rect minus inner rect = border strip, no corner double-counting.
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d",
-        `M0,0 H${W} V${H} H0 Z M${edge},${edge} H${edge + inner} V${edge + innerH} H${edge} Z`
-      );
-      path.setAttribute("fill", "rgba(0, 200, 80, 0.2)");
-      path.setAttribute("fill-rule", "evenodd");
-      path.setAttribute("pointer-events", "none");
-      els.edgePaddingLayer.appendChild(path);
-    }
 
     function updateBodyNodes() {
       const maxAngle = rotationMaxDegrees();
@@ -1491,7 +1408,6 @@
       });
       updateSafeZoneLayer();
       updateCollisionGapLayer();
-      updateEdgePaddingLayer();
     }
 
     function gridReps() {
@@ -2107,12 +2023,7 @@
     }
 
     [
-      els.fontFamily,
-      els.fontWeight,
-      els.letterSpacing,
-      els.wordSize,
       els.safeZone,
-      els.edgePct,
       els.wordGap,
       els.floatStrength,
       els.floatSpeed,
@@ -2123,17 +2034,6 @@
     ].forEach((element) => {
       element.addEventListener("input", updateFromControls);
       element.addEventListener("change", updateFromControls);
-    });
-
-    els.clusterInput.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter") return;
-      event.preventDefault();
-      addClusterFromInput();
-    });
-    els.addCluster.addEventListener("click", addClusterFromInput);
-    els.fontFamily.addEventListener("pointerdown", loadLocalFonts);
-    els.fontFamily.addEventListener("focus", () => {
-      if (!localFontsRequested) loadLocalFonts();
     });
 
     rangeControls.forEach((control) => {
@@ -2158,12 +2058,6 @@
     applySvgVisibility();
     els.showSafeZone.addEventListener("change", updateBodyNodes);
     els.showCollisionGap.addEventListener("change", updateBodyNodes);
-    els.showEdgePadding.addEventListener("change", updateEdgePaddingLayer);
-    els.showOuterPadding.addEventListener("change", () => {
-      document.body.style.background = els.showOuterPadding.checked ? "rgba(0, 200, 80, 0.2)" : "#f7f6f3";
-    });
-    els.edgePct.addEventListener("input", updateEdgePaddingLayer);
-    els.edgeValue.addEventListener("input", updateEdgePaddingLayer);
     els.svgUpload.addEventListener("change", handleSvgUpload);
     els.resetWords.addEventListener("click", resetWords);
     els.exportSvg.addEventListener("click", exportSvg);
