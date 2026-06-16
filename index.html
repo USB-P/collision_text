@@ -1650,8 +1650,15 @@
       if (!collision) return;
       const { nx, ny, penetration } = collision;
 
-      const invA = a.dragging ? 0 : 1 / a.mass;
-      const invB = b.dragging ? 0 : 1 / b.mass;
+      const aIsAccent = accentBodies.includes(a);
+      const bIsAccent = accentBodies.includes(b);
+      // For word-vs-accent contacts treat the accent body as an immovable wall:
+      // the word bounces off fully while accent motion is driven only by magnetism/drag.
+      const wordAccentPair = aIsAccent !== bIsAccent;
+      const rawInvA = a.dragging ? 0 : 1 / a.mass;
+      const rawInvB = b.dragging ? 0 : 1 / b.mass;
+      const invA = (wordAccentPair && aIsAccent) ? 0 : rawInvA;
+      const invB = (wordAccentPair && bIsAccent) ? 0 : rawInvB;
       const invSum = invA + invB;
       if (invSum === 0) return;
 
@@ -1664,7 +1671,7 @@
       b.y += ny * correctionMag * (invB / invSum);
 
       // Between accent words: separate positions only, no velocity impulse (no bounce)
-      if (accentBodies.includes(a) && accentBodies.includes(b)) return;
+      if (aIsAccent && bIsAccent) return;
 
       const relativeVx = (b.vx || 0) - (a.vx || 0);
       const relativeVy = (b.vy || 0) - (a.vy || 0);
