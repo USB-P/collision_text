@@ -1150,10 +1150,9 @@
         const size = fitSize(text, WORLD.width - edge * 2, Math.max(4, band * 0.82), targetSize);
         const metrics = metricsFor(text, size);
         const existing = keepPositions ? oldWords[index] : null;
-        const savedPos = !existing && (loadPositions()?.words?.[text.toLowerCase()]);
-        const startPos = !existing && !savedPos && WORD_STARTS[text.toLowerCase()];
-        const x = existing ? existing.x : savedPos ? savedPos.px * WORLD.width : startPos ? startPos.px * WORLD.width : (WORLD.width - metrics.width) / 2;
-        const y = existing ? existing.y : savedPos ? savedPos.py * WORLD.height : startPos ? startPos.py * WORLD.height : edge + band * index + band * 0.68 + metrics.ascent * 0.2;
+        const startPos = !existing && WORD_STARTS[text.toLowerCase()];
+        const x = existing ? existing.x : startPos ? startPos.px * WORLD.width : (WORLD.width - metrics.width) / 2;
+        const y = existing ? existing.y : startPos ? startPos.py * WORLD.height : edge + band * index + band * 0.68 + metrics.ascent * 0.2;
         const mass = Math.max(1, (metrics.width * (metrics.ascent + metrics.descent)) / 95);
         const textNode = svgEl("text", { class: "main-text" });
         const hitNode = svgEl("rect", { class: "hit-box" });
@@ -1780,25 +1779,11 @@
       updateBodyNodes();
     }
 
-    function savePositions() {
-      const words = {};
-      wordBodies.forEach((w) => {
-        words[w.text.toLowerCase()] = { px: w.x / WORLD.width, py: w.y / WORLD.height };
-      });
-      const svgs = customObjects.map((o) => ({ px: o.x / WORLD.width, py: o.y / WORLD.height }));
-      localStorage.setItem("collisionPositions", JSON.stringify({ words, svgs }));
-    }
-
-    function loadPositions() {
-      try { return JSON.parse(localStorage.getItem("collisionPositions") || "null"); } catch { return null; }
-    }
-
     function endDrag() {
       if (!activeBody) return;
       activeBody.dragging = false;
       activeBody = null;
       updateBodyNodes();
-      savePositions();
     }
 
     function resetWords() {
@@ -2099,9 +2084,7 @@
         return Math.max(def.pxMin, Math.min(def.pxMax, def.pxMin + (def.pxMax - def.pxMin) * t));
       }
 
-      const savedLayout = loadPositions();
-
-      customObjects = svgDefs.map((def, i) => {
+      customObjects = svgDefs.map((def) => {
         const objHeight = svgRect.height > 0 ? responsiveHeightPx(def) / svgRect.height * WORLD.height : 12;
         const objWidth = objHeight * (def.nativeW / def.nativeH);
         const parsed = new DOMParser().parseFromString(def.content, "image/svg+xml");
@@ -2111,13 +2094,12 @@
           group.appendChild(document.importNode(child, true));
         });
 
-        const savedSvgPos = savedLayout?.svgs?.[i];
         const object = {
           kind: "svg",
           native: { width: def.nativeW, height: def.nativeH },
           pxMin: def.pxMin, pxMax: def.pxMax,
-          x: (savedSvgPos ? savedSvgPos.px : def.px) * WORLD.width,
-          y: (savedSvgPos ? savedSvgPos.py : def.py) * WORLD.height,
+          x: def.px * WORLD.width,
+          y: def.py * WORLD.height,
           width: objWidth,
           height: objHeight,
           vx: 0, vy: 0, angle: 0, av: 0,
