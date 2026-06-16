@@ -1730,7 +1730,6 @@
     }
 
     function resolveWordCollision(a, b) {
-      if (accentBodies.includes(a) && accentBodies.includes(b)) return;
       const collision = maskedCollision(a, b);
       if (!collision) return;
       const { nx, ny, penetration } = collision;
@@ -1745,6 +1744,9 @@
       a.y -= ny * correction * (invA / invSum);
       b.x += nx * correction * (invB / invSum);
       b.y += ny * correction * (invB / invSum);
+
+      // Between accent words: separate positions only, no velocity impulse (no bounce)
+      if (accentBodies.includes(a) && accentBodies.includes(b)) return;
 
       const relativeVx = (b.vx || 0) - (a.vx || 0);
       const relativeVy = (b.vy || 0) - (a.vy || 0);
