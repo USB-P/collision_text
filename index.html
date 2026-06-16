@@ -1496,7 +1496,7 @@
           tspan.textContent = rowContent[i];
           tspan.setAttribute("x", row0Chars[i].startX.toFixed(3));
           node.appendChild(tspan);
-          gridCharData.push({ tspan, x: row0Chars[i].cx, y: cy, hidden: false });
+          gridCharData.push({ tspan, x: row0Chars[i].cx, y: cy, hw: row0Chars[i].cw / 2, hh: halfAscent, hidden: false });
         }
         fragment.appendChild(node);
       }
@@ -1512,10 +1512,23 @@
       const h = safeZoneMaskCanvas.height;
       const pixels = safeZoneMaskCtx.getImageData(0, 0, w, h).data;
       for (const char of gridCharData) {
-        const px = Math.round(char.x * SAFE_MASK_SCALE);
-        const py = Math.round(char.y * SAFE_MASK_SCALE);
-        const hidden = px >= 0 && py >= 0 && px < w && py < h
-          && pixels[(py * w + px) * 4 + 3] > 18;
+        const cx = char.x * SAFE_MASK_SCALE;
+        const cy = char.y * SAFE_MASK_SCALE;
+        const hw = char.hw * SAFE_MASK_SCALE;
+        const hh = char.hh * SAFE_MASK_SCALE;
+        const samples = [
+          [cx, cy],
+          [cx - hw, cy],
+          [cx + hw, cy],
+          [cx, cy - hh],
+          [cx, cy + hh]
+        ];
+        const hidden = samples.some(([sx, sy]) => {
+          const ix = Math.round(sx);
+          const iy = Math.round(sy);
+          return ix >= 0 && iy >= 0 && ix < w && iy < h
+            && pixels[(iy * w + ix) * 4 + 3] > 18;
+        });
         if (hidden !== char.hidden) {
           char.hidden = hidden;
           char.tspan.style.visibility = hidden ? "hidden" : "";
