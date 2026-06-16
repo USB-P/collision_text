@@ -282,15 +282,25 @@
     }
 
     .main-text,
-    .grid-glyph {
-      fill: #000;
+    .grid-glyph,
+    .accent-text {
       font-family: "univers-next-pro", sans-serif;
       letter-spacing: 0;
       dominant-baseline: alphabetic;
     }
 
-    .main-text {
+    .main-text,
+    .grid-glyph {
+      fill: #000;
+    }
+
+    .main-text,
+    .accent-text {
       font-weight: 700;
+    }
+
+    .accent-text {
+      fill: #FF2D55;
     }
 
     .grid-glyph {
@@ -519,6 +529,7 @@
       <g id="gridLayer" mask="url(#gridMask)"></g>
       <g id="customLayer"></g>
       <g id="mainLayer"></g>
+      <g id="accentLayer"></g>
       <g id="collisionGapLayer"></g>
       <g id="safeZoneLayer"></g>
       <g id="edgePaddingLayer"></g>
@@ -589,6 +600,7 @@
       safeZoneLayer: document.querySelector("#safeZoneLayer"),
       edgePaddingLayer: document.querySelector("#edgePaddingLayer"),
       mainLayer: document.querySelector("#mainLayer"),
+      accentLayer: document.querySelector("#accentLayer"),
       hitLayer: document.querySelector("#hitLayer"),
       showEdgePadding: document.querySelector("#showEdgePadding"),
       showOuterPadding: document.querySelector("#showOuterPadding")
@@ -634,6 +646,7 @@
     };
 
     let wordBodies = [];
+    let accentBodies = [];
     let customObjects = [];
     let gridSignatureValue = "";
     let wordSignatureValue = "";
@@ -1225,6 +1238,70 @@
       });
     }
 
+    const ACCENT_WORDS = ["7.—9.", "oktober"];
+    const ACCENT_SIZE_PX = 130;
+
+    function accentWordSize() {
+      const svgR = els.svg.getBoundingClientRect();
+      return svgR.height > 0 ? ACCENT_SIZE_PX / svgR.height * WORLD.height : 13;
+    }
+
+    function updateAccentWordMetrics() {
+      const size = accentWordSize();
+      accentBodies.forEach((word) => {
+        word.size = size;
+        word.metrics = metricsFor(word.text, size);
+        word.charOffsets = computeCharOffsets(word.text, size);
+        word.mass = Math.max(1, (word.metrics.width * (word.metrics.ascent + word.metrics.descent)) / 95);
+      });
+    }
+
+    function buildAccentWords() {
+      clear(els.accentLayer);
+      const size = accentWordSize();
+      const maxAngle = rotationMaxDegrees();
+
+      accentBodies = ACCENT_WORDS.map((text, index) => {
+        const metrics = metricsFor(text, size);
+        const x = WORLD.width * (index === 0 ? 0.05 : 0.4);
+        const y = WORLD.height * (index === 0 ? 0.82 : 0.15);
+        const mass = Math.max(1, (metrics.width * (metrics.ascent + metrics.descent)) / 95);
+        const textNode = svgEl("text", { class: "accent-text" });
+        const hitNode = svgEl("rect", { class: "hit-box" });
+        const word = {
+          kind: "word",
+          text,
+          index,
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 1.6,
+          vy: (Math.random() - 0.5) * 1.6,
+          angle: (Math.random() - 0.5) * maxAngle * 1.2,
+          av: (Math.random() - 0.5) * 3,
+          wanderAngle: Math.random() * Math.PI * 2,
+          wanderTimer: 0.6 + Math.random() * 1.4,
+          turnPhase: Math.random() * Math.PI * 2,
+          size,
+          metrics,
+          charOffsets: computeCharOffsets(text, size),
+          mass,
+          textNode,
+          hitNode,
+          dragging: false,
+          dragDx: 0,
+          dragDy: 0,
+          lastPointerTime: performance.now()
+        };
+        textNode.textContent = text;
+        hitNode.addEventListener("pointerdown", (event) => startDrag(event, word));
+        textNode.addEventListener("pointerdown", (event) => startDrag(event, word));
+        els.accentLayer.appendChild(textNode);
+        els.hitLayer.appendChild(hitNode);
+        keepBodyInsideWorld(word);
+        return word;
+      });
+    }
+
     function updateSvgObjectSizes() {
       if (!customObjects.length) return;
       const svgRect = els.svg.getBoundingClientRect();
@@ -1240,7 +1317,9 @@
     function applyWorldChange() {
       updateSvgObjectSizes();
       updateWordMetrics();
+      updateAccentWordMetrics();
       wordBodies.forEach(keepBodyInsideWorld);
+      accentBodies.forEach(keepBodyInsideWorld);
       customObjects.forEach(keepBodyInsideWorld);
       updateBodyNodes();
       wordSignatureValue = wordSignature();
@@ -1294,7 +1373,7 @@
     function updateSafeZoneLayer() {
       clear(els.safeZoneLayer);
       if (!els.showSafeZone.checked) return;
-      wordBodies.forEach((word) => {
+      wordBodies.concat(accentBodies).forEach((word) => {
         els.safeZoneLayer.appendChild(
           overlayTextNode(word, "rgba(255, 50, 80, 0.45)", safeZoneRadius(word) * 2)
         );
@@ -1309,7 +1388,7 @@
     function updateCollisionGapLayer() {
       clear(els.collisionGapLayer);
       if (!els.showCollisionGap.checked) return;
-      wordBodies.forEach((word) => {
+      wordBodies.concat(accentBodies).forEach((word) => {
         els.collisionGapLayer.appendChild(
           overlayTextNode(word, "rgba(46, 140, 255, 0.45)", collisionRadius(word) * 2)
         );
@@ -1363,6 +1442,28 @@
         word.hitNode.setAttribute("transform", rotate);
         word.hitNode.classList.toggle("dragging", word.dragging);
 
+      });
+
+      accentBodies.forEach((word) => {
+        word.angle = clamp(word.angle, -maxAngle, maxAngle);
+        const box = bodyBox(word, Math.max(1, collisionRadius(word)));
+        const center = bodyCenter(word);
+        const rotate = `rotate(${word.angle.toFixed(3)} ${center.x.toFixed(3)} ${center.y.toFixed(3)})`;
+
+        word.textNode.setAttribute("x", word.x.toFixed(3));
+        word.textNode.setAttribute("y", word.y.toFixed(3));
+        word.textNode.setAttribute("font-size", word.size.toFixed(3));
+        word.textNode.setAttribute("font-family", selectedFontStack());
+        word.textNode.setAttribute("letter-spacing", letterSpacingValue().toFixed(3));
+        word.textNode.setAttribute("transform", rotate);
+        word.textNode.classList.toggle("dragging", word.dragging);
+
+        word.hitNode.setAttribute("x", box.left.toFixed(3));
+        word.hitNode.setAttribute("y", box.top.toFixed(3));
+        word.hitNode.setAttribute("width", box.width.toFixed(3));
+        word.hitNode.setAttribute("height", box.height.toFixed(3));
+        word.hitNode.setAttribute("transform", rotate);
+        word.hitNode.classList.toggle("dragging", word.dragging);
       });
 
       customObjects.forEach((object) => {
@@ -1493,7 +1594,7 @@
     }
 
     function physicsBodies() {
-      return wordBodies.concat(customObjects);
+      return wordBodies.concat(accentBodies, customObjects);
     }
 
     function clampBodySpeed(body) {
@@ -1715,7 +1816,7 @@
       const damping = Math.exp(-numberValue(els.friction) * dt);
       const bodies = physicsBodies();
 
-      wordBodies.forEach((word) => {
+      wordBodies.concat(accentBodies).forEach((word) => {
         applyFloat(word, dt);
         applyRotation(word, dt, now);
       });
@@ -2112,12 +2213,15 @@
     updateReadouts();
     rebuildGrid();
     rebuildWords(false);
+    buildAccentWords();
     requestAnimationFrame(animate);
     loadInlineSvg();
 
     document.fonts.ready.then(() => {
       updateWordMetrics();
+      updateAccentWordMetrics();
       wordBodies.forEach(keepBodyInsideWorld);
+      accentBodies.forEach(keepBodyInsideWorld);
       gridSignatureValue = "";
       updateBodyNodes();
     });
