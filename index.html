@@ -6,15 +6,6 @@
   <title>Editable Text Collision Poster</title>
   <link rel="stylesheet" href="https://use.typekit.net/xfw8hqh.css">
   <style>
-    :root {
-      color-scheme: light;
-      --ink: #050505;
-      --paper: #f4f3f1;
-      --panel: rgb(255 255 255 / 92%);
-      --line: #d8d6d0;
-      --focus: #1f6feb;
-    }
-
     * {
       box-sizing: border-box;
     }
@@ -26,233 +17,7 @@
       margin: 0;
       overflow: hidden;
       background: #f7f6f3;
-      color: var(--ink);
       font-family: "univers-next-pro", sans-serif;
-    }
-
-    .controls {
-      position: fixed;
-      z-index: 5;
-      top: 0;
-      left: 0;
-      width: min(340px, 34vw);
-      max-width: 100%;
-      height: 100%;
-      overflow: auto;
-      padding: 24px;
-      background: var(--panel);
-      border-right: 1px solid var(--line);
-      backdrop-filter: blur(18px);
-      transition: opacity 180ms ease, transform 180ms ease;
-    }
-
-    body.controls-hidden .controls {
-      opacity: 0;
-      pointer-events: none;
-      transform: translateX(-100%);
-    }
-
-    h1 {
-      margin: 0 0 20px;
-      font-size: 20px;
-      line-height: 1.15;
-      letter-spacing: 0;
-    }
-
-    .section-title {
-      margin: 24px 0 12px;
-      padding-top: 16px;
-      border-top: 1px solid var(--line);
-      color: #2d2a25;
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: 0;
-      text-transform: uppercase;
-    }
-
-    .control {
-      display: grid;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .control[hidden] {
-      display: none;
-    }
-
-    label {
-      font-size: 12px;
-      font-weight: 700;
-      color: #34322e;
-      text-transform: uppercase;
-      letter-spacing: 0;
-    }
-
-    input[type="text"],
-    input[type="search"],
-    input[type="file"],
-    input[type="number"],
-    select {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px 11px;
-      color: var(--ink);
-      background: #fff;
-      font: inherit;
-      outline: none;
-    }
-
-    input:focus,
-    select:focus {
-      border-color: var(--focus);
-      box-shadow: 0 0 0 3px rgb(31 111 235 / 14%);
-    }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: #111;
-    }
-
-    input[type="number"] {
-      appearance: textfield;
-    }
-
-    input[type="number"]::-webkit-outer-spin-button,
-    input[type="number"]::-webkit-inner-spin-button {
-      appearance: none;
-      margin: 0;
-    }
-
-    select {
-      appearance: none;
-    }
-
-    .range-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 68px;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .cluster-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 42px;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .cluster-row button {
-      min-height: 42px;
-      padding: 0;
-      font-size: 22px;
-      line-height: 1;
-    }
-
-    .cluster-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      min-height: 34px;
-    }
-
-    .cluster-chip {
-      display: inline-flex;
-      align-items: center;
-      max-width: 100%;
-      min-height: 30px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      overflow: hidden;
-    }
-
-    .cluster-chip span {
-      min-width: 0;
-      padding: 6px 8px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .cluster-chip button {
-      width: 28px;
-      min-height: 30px;
-      border: 0;
-      border-left: 1px solid var(--line);
-      border-radius: 0;
-      background: #fff;
-      color: #111;
-      font-size: 14px;
-    }
-
-    .font-status {
-      min-height: 14px;
-      color: #6b665f;
-      font-size: 11px;
-      line-height: 1.3;
-    }
-
-    .value {
-      min-width: 62px;
-      padding: 6px 8px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      text-align: right;
-      font-size: 13px;
-      color: #211f1b;
-      background: #fafafa;
-    }
-
-    .number-value {
-      height: 34px;
-      font-family: inherit;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .actions {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    button {
-      min-height: 40px;
-      border: 1px solid #111;
-      border-radius: 8px;
-      background: #111;
-      color: #fff;
-      font: inherit;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    button.secondary {
-      background: #fff;
-      color: #111;
-    }
-
-    .controls-toggle {
-      position: fixed;
-      z-index: 6;
-      top: 16px;
-      left: 16px;
-      min-height: 38px;
-      padding: 0 14px;
-      border-color: rgb(17 17 17 / 72%);
-      background: rgb(255 255 255 / 88%);
-      color: #111;
-      backdrop-filter: blur(14px);
-      box-shadow: 0 10px 28px rgb(0 0 0 / 10%);
-    }
-
-    .controls-toggle[aria-expanded="false"] {
-      background: #111;
-      color: #fff;
     }
 
     .stage {
@@ -270,7 +35,7 @@
     }
 
     .paper {
-      fill: var(--paper);
+      fill: #f4f3f1;
     }
 
     .main-text,
@@ -332,115 +97,9 @@
       fill: black;
     }
 
-    @media (max-width: 760px) {
-      .controls {
-        width: 100%;
-        height: 42%;
-        border-right: 0;
-        border-bottom: 1px solid var(--line);
-      }
-
-      body.controls-hidden .controls {
-        transform: translateY(-100%);
-      }
-
-    }
   </style>
 </head>
 <body>
-  <button id="toggleControls" class="controls-toggle" type="button" aria-expanded="true" aria-controls="controlsPanel">Hide Controls</button>
-
-  <aside id="controlsPanel" class="controls">
-    <h1>Collision Text Poster</h1>
-
-    <input type="hidden" id="mainText" value='["Slop","till","You","Drop"]'>
-    <input type="hidden" id="fontFamily" value="univers-next-pro">
-    <input type="hidden" id="fontWeight" value="700">
-    <input type="hidden" id="letterSpacing" value="0">
-    <input type="hidden" id="letterSpacingValue" value="0">
-    <input type="hidden" id="wordSize" value="18.1">
-    <input type="hidden" id="wordSizeValue" value="18.1">
-
-    <div class="control">
-      <label for="safeZone">Safe zone</label>
-      <div class="range-row">
-        <input id="safeZone" type="range" min="0" max="60" step="1" value="5">
-        <input id="safeZoneValue" class="value number-value" type="number" min="0" max="60" step="1" value="5" aria-label="Safe zone value">
-      </div>
-      <label for="showSafeZone" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-transform:none;font-weight:400;font-size:12px;color:#6b665f;">
-        <input id="showSafeZone" type="checkbox"> Show safe zone overlay
-      </label>
-    </div>
-
-    <input type="hidden" id="edgePct" value="1">
-    <input type="hidden" id="edgeValue" value="1">
-
-    <div class="section-title">Word Physics</div>
-
-    <div class="control">
-      <label for="wordGap">Word collision gap</label>
-      <div class="range-row">
-        <input id="wordGap" type="range" min="0" max="60" step="0.1" value="0">
-        <input id="wordGapValue" class="value number-value" type="number" min="0" max="60" step="0.1" value="0" aria-label="Word collision gap value">
-      </div>
-      <label for="showCollisionGap" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-transform:none;font-weight:400;font-size:12px;color:#6b665f;">
-        <input id="showCollisionGap" type="checkbox"> Show collision gap overlay
-      </label>
-    </div>
-
-    <div class="control">
-      <label for="floatStrength">Float strength</label>
-      <div class="range-row">
-        <input id="floatStrength" type="range" min="0" max="8" step="0.1" value="6">
-        <input id="floatStrengthValue" class="value number-value" type="number" min="0" max="8" step="0.1" value="6" aria-label="Float strength value">
-      </div>
-    </div>
-
-    <div class="control">
-      <label for="floatSpeed">Float speed</label>
-      <div class="range-row">
-        <input id="floatSpeed" type="range" min="0" max="18" step="0.1" value="6">
-        <input id="floatSpeedValue" class="value number-value" type="number" min="0" max="18" step="0.1" value="6" aria-label="Float speed value">
-      </div>
-    </div>
-
-    <div class="control">
-      <label for="rotationAmount">Rotation amount</label>
-      <div class="range-row">
-        <input id="rotationAmount" type="range" min="0" max="100" step="1" value="0">
-        <input id="rotationAmountValue" class="value number-value" type="number" min="0" max="100" step="1" value="0" aria-label="Rotation amount value">
-      </div>
-    </div>
-
-    <div class="control">
-      <label for="rotationFloat">Rotation float</label>
-      <div class="range-row">
-        <input id="rotationFloat" type="range" min="0" max="10" step="0.1" value="0">
-        <input id="rotationFloatValue" class="value number-value" type="number" min="0" max="10" step="0.1" value="0" aria-label="Rotation float value">
-      </div>
-    </div>
-
-    <div class="control">
-      <label for="bounce">Bounce</label>
-      <div class="range-row">
-        <input id="bounce" type="range" min="20" max="100" value="50">
-        <input id="bounceValue" class="value number-value" type="number" min="20" max="100" step="1" value="50" aria-label="Bounce value">
-      </div>
-    </div>
-
-    <div class="control">
-      <label for="friction">Move friction</label>
-      <div class="range-row">
-        <input id="friction" type="range" min="0" max="8" step="0.1" value="0">
-        <input id="frictionValue" class="value number-value" type="number" min="0" max="8" step="0.1" value="0" aria-label="Move friction value">
-      </div>
-    </div>
-
-    <div class="actions">
-      <button id="resetWords" type="button">Reset</button>
-    </div>
-  </aside>
-
   <main class="stage">
     <svg id="posterSvg" viewBox="0 0 100 100" preserveAspectRatio="xMinYMin meet" role="img" aria-label="Generated text collision poster">
       <defs>
@@ -448,20 +107,12 @@
           <rect id="gridMaskBg" fill="white" width="100" height="100"/>
           <g id="gridMaskWords"></g>
         </mask>
-        <filter id="safeZoneTint" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-          <feColorMatrix type="matrix" values="0 0 0 1 0  0 0 0 0.196 0  0 0 0 0.314 0  0 0 0 0.45 0"/>
-        </filter>
-        <filter id="collisionGapTint" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-          <feColorMatrix type="matrix" values="0 0 0 0.18 0  0 0 0 0.55 0  0 0 0 1 0  0 0 0 0.4 0"/>
-        </filter>
       </defs>
       <rect id="paper" class="paper" width="100" height="100"></rect>
       <g id="gridLayer" mask="url(#gridMask)"></g>
       <g id="customLayer"></g>
       <g id="mainLayer"></g>
       <g id="accentLayer"></g>
-      <g id="collisionGapLayer"></g>
-      <g id="safeZoneLayer"></g>
       <g id="hitLayer"></g>
     </svg>
   </main>
@@ -469,10 +120,6 @@
   <script>
     const SVG_NS = "http://www.w3.org/2000/svg";
     const WORLD = { width: 100, height: 100 };
-    const FALLBACK_FONTS = [
-      "univers-next-pro"
-    ];
-    const GENERIC_FONTS = new Set(["serif", "sans-serif", "monospace", "cursive", "fantasy", "system-ui"]);
     const ROTATION_FRICTION = 9.5;
     const GRID_TEXT = "INDIGO 2026 ";
     const GRID_LINE_HEIGHT = 1.09;
@@ -481,58 +128,16 @@
     const GRID_MOBILE_BREAKPOINT = 760;
 
     const els = {
-      mainText: document.querySelector("#mainText"),
-      fontFamily: document.querySelector("#fontFamily"),
-      fontWeight: document.querySelector("#fontWeight"),
-      letterSpacing: document.querySelector("#letterSpacing"),
-      letterSpacingValue: document.querySelector("#letterSpacingValue"),
-      wordSize: document.querySelector("#wordSize"),
-      wordSizeValue: document.querySelector("#wordSizeValue"),
-      safeZone: document.querySelector("#safeZone"),
-      safeZoneValue: document.querySelector("#safeZoneValue"),
-      showSafeZone: document.querySelector("#showSafeZone"),
-      edgePct: document.querySelector("#edgePct"),
-      edgeValue: document.querySelector("#edgeValue"),
-      wordGap: document.querySelector("#wordGap"),
-      wordGapValue: document.querySelector("#wordGapValue"),
-      showCollisionGap: document.querySelector("#showCollisionGap"),
-      floatStrength: document.querySelector("#floatStrength"),
-      floatStrengthValue: document.querySelector("#floatStrengthValue"),
-      floatSpeed: document.querySelector("#floatSpeed"),
-      floatSpeedValue: document.querySelector("#floatSpeedValue"),
-      rotationAmount: document.querySelector("#rotationAmount"),
-      rotationAmountValue: document.querySelector("#rotationAmountValue"),
-      rotationFloat: document.querySelector("#rotationFloat"),
-      rotationFloatValue: document.querySelector("#rotationFloatValue"),
-      bounce: document.querySelector("#bounce"),
-      bounceValue: document.querySelector("#bounceValue"),
-      friction: document.querySelector("#friction"),
-      frictionValue: document.querySelector("#frictionValue"),
-      resetWords: document.querySelector("#resetWords"),
-      toggleControls: document.querySelector("#toggleControls"),
       svg: document.querySelector("#posterSvg"),
       paper: document.querySelector("#paper"),
       gridLayer: document.querySelector("#gridLayer"),
       gridMaskBg: document.querySelector("#gridMaskBg"),
       gridMaskWords: document.querySelector("#gridMaskWords"),
       customLayer: document.querySelector("#customLayer"),
-      collisionGapLayer: document.querySelector("#collisionGapLayer"),
-      safeZoneLayer: document.querySelector("#safeZoneLayer"),
       mainLayer: document.querySelector("#mainLayer"),
       accentLayer: document.querySelector("#accentLayer"),
       hitLayer: document.querySelector("#hitLayer")
     };
-
-    const rangeControls = [
-      { range: els.safeZone, field: els.safeZoneValue },
-      { range: els.wordGap, field: els.wordGapValue },
-      { range: els.floatStrength, field: els.floatStrengthValue },
-      { range: els.floatSpeed, field: els.floatSpeedValue },
-      { range: els.rotationAmount, field: els.rotationAmountValue },
-      { range: els.rotationFloat, field: els.rotationFloatValue },
-      { range: els.bounce, field: els.bounceValue },
-      { range: els.friction, field: els.frictionValue }
-    ];
 
     const measureCanvas = document.createElement("canvas");
     const measureCtx = measureCanvas.getContext("2d");
@@ -545,10 +150,6 @@
     safeZoneMaskCanvas.width = Math.ceil(WORLD.width * SAFE_MASK_SCALE);
     safeZoneMaskCanvas.height = Math.ceil(WORLD.height * SAFE_MASK_SCALE);
     const safeZoneMaskCtx = safeZoneMaskCanvas.getContext("2d", { willReadFrequently: true });
-    const collisionGapMaskCanvas = document.createElement("canvas");
-    collisionGapMaskCanvas.width = Math.ceil(WORLD.width * SAFE_MASK_SCALE);
-    collisionGapMaskCanvas.height = Math.ceil(WORLD.height * SAFE_MASK_SCALE);
-    const collisionGapMaskCtx = collisionGapMaskCanvas.getContext("2d");
 
     function layoutT() {
       return Math.max(0, Math.min(1, (window.innerWidth - 393) / (1440 - 393)));
@@ -568,11 +169,7 @@
     let accentBodies = [];
     let customObjects = [];
     let gridSignatureValue = "";
-    let wordSignatureValue = "";
     let gridCharData = [];
-    let textClusters = [];
-    let localFontFamilies = FALLBACK_FONTS.slice();
-    let localFontsRequested = false;
     let lastContainerWidth = 0;
     let lastContainerHeight = 0;
     let activeBody = null;
@@ -592,72 +189,8 @@
       return Math.max(min, Math.min(max, value));
     }
 
-    function numberValue(element) {
-      return Number(element.value);
-    }
-
-    function cssFontFamilyName(name) {
-      const family = (name || "univers-next-pro").trim();
-      if (GENERIC_FONTS.has(family.toLowerCase())) return family;
-      return JSON.stringify(family);
-    }
-
-    function selectedFontStack() {
-      const primary = els.fontFamily.value.trim() || "univers-next-pro";
-      return `${cssFontFamilyName(primary)}, sans-serif`;
-    }
-
-    function fontWeightValue() {
-      return els.fontWeight.value || "900";
-    }
-
-    function letterSpacingValue() {
-      return numberValue(els.letterSpacing);
-    }
-
     function font(size) {
-      return `${fontWeightValue()} ${size}px ${selectedFontStack()}`;
-    }
-
-    function pct(value) {
-      const rounded = Math.round(value * 10) / 10;
-      return `${rounded}%`;
-    }
-
-    function stepDecimals(step) {
-      const text = String(step || "1");
-      return text.includes(".") ? text.split(".")[1].length : 0;
-    }
-
-    function formattedControlValue(control, value = numberValue(control.range)) {
-      const decimals = stepDecimals(control.range.step);
-      return decimals ? value.toFixed(decimals) : String(Math.round(value));
-    }
-
-    function clampControlValue(control, rawValue) {
-      const min = Number(control.range.min);
-      const max = Number(control.range.max);
-      return clamp(Number(rawValue), min, max);
-    }
-
-    function syncFieldFromRange(control) {
-      control.field.value = formattedControlValue(control);
-    }
-
-    function syncRangeFromField(control, force = false) {
-      const raw = control.field.value.trim();
-      const parsed = Number(raw);
-
-      if (!raw || Number.isNaN(parsed)) {
-        if (force) syncFieldFromRange(control);
-        return false;
-      }
-
-      const value = clampControlValue(control, parsed);
-      const formatted = formattedControlValue(control, value);
-      control.range.value = formatted;
-      control.field.value = formatted;
-      return true;
+      return `700 ${size}px "univers-next-pro", sans-serif`;
     }
 
     function syncWorldToContainer() {
@@ -684,8 +217,6 @@
       WORLD.height = nextHeight;
       safeZoneMaskCanvas.width = Math.ceil(WORLD.width * SAFE_MASK_SCALE);
       safeZoneMaskCanvas.height = Math.ceil(WORLD.height * SAFE_MASK_SCALE);
-      collisionGapMaskCanvas.width = Math.ceil(WORLD.width * SAFE_MASK_SCALE);
-      collisionGapMaskCanvas.height = Math.ceil(WORLD.height * SAFE_MASK_SCALE);
       els.svg.setAttribute("viewBox", `0 0 ${WORLD.width.toFixed(3)} ${WORLD.height.toFixed(3)}`);
       els.paper.setAttribute("width", WORLD.width.toFixed(3));
       els.paper.setAttribute("height", WORLD.height.toFixed(3));
@@ -695,85 +226,12 @@
       return changed;
     }
 
-    function normalizeClusterText(text) {
-      return text.trim().replace(/\s+/g, " ");
-    }
-
-    function parseStoredClusters(value) {
-      const trimmed = (value || "").trim();
-      if (!trimmed) return ["Save", "the", "Date"];
-
-      try {
-        const parsed = JSON.parse(trimmed);
-        if (Array.isArray(parsed)) {
-          return parsed.map((item) => normalizeClusterText(String(item))).filter(Boolean);
-        }
-      } catch (error) {
-        // Legacy files used a plain text field.
-      }
-
-      if (trimmed.includes("|")) {
-        const clusters = trimmed.split("|").map(normalizeClusterText).filter(Boolean);
-        if (clusters.length) return clusters;
-      }
-
-      return trimmed.split(/\s+/).map(normalizeClusterText).filter(Boolean);
-    }
-
-    function serializeClusters() {
-      return JSON.stringify(textClusters);
-    }
-
-    function renderClusterList() {
-      if (!els.clusterList) return;
-      clear(els.clusterList);
-      textClusters.forEach((text, index) => {
-        const chip = document.createElement("div");
-        chip.className = "cluster-chip";
-
-        const label = document.createElement("span");
-        label.textContent = text;
-
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.textContent = "x";
-        remove.setAttribute("aria-label", `Remove ${text}`);
-        remove.addEventListener("click", () => removeCluster(index));
-
-        chip.append(label, remove);
-        els.clusterList.appendChild(chip);
-      });
-    }
-
-    function syncClustersToInput() {
-      els.mainText.value = serializeClusters();
-      renderClusterList();
-    }
-
-    function setClusters(clusters, shouldUpdate = true) {
-      textClusters = clusters.map(normalizeClusterText).filter(Boolean).slice(0, 18);
-      syncClustersToInput();
-      if (shouldUpdate) updateFromControls();
-    }
-
-    function addClusterFromInput() {
-      const text = normalizeClusterText(els.clusterInput.value);
-      if (!text) return;
-      setClusters(textClusters.concat(text));
-      els.clusterInput.value = "";
-      els.clusterInput.focus();
-    }
-
-    function removeCluster(index) {
-      setClusters(textClusters.filter((_, itemIndex) => itemIndex !== index));
-    }
-
     function tokensFromInput() {
-      return textClusters.slice(0, 18);
+      return ["Slop", "till", "You", "Drop"];
     }
 
-    function metricsFor(text, size, spacing = letterSpacingValue(), weight = fontWeightValue()) {
-      measureCtx.font = `${weight} ${size}px ${selectedFontStack()}`;
+    function metricsFor(text, size, spacing = 0, weight = "700") {
+      measureCtx.font = `${weight} ${size}px "univers-next-pro", sans-serif`;
       const metrics = measureCtx.measureText(text);
       const chars = [...text];
       // Use full-string measureText (kerning-aware) then add custom letter-spacing on top
@@ -789,7 +247,7 @@
 
     function computeCharOffsets(text, size) {
       const chars = [...text];
-      const spacing = letterSpacingValue();
+      const spacing = 0;
       measureCtx.font = font(size);
       return chars.map((char, i) => {
         const prefix = chars.slice(0, i).join("");
@@ -805,7 +263,7 @@
       });
     }
 
-    function drawSpacedText(ctx, text, x, y, mode, spacing = letterSpacingValue()) {
+    function drawSpacedText(ctx, text, x, y, mode, spacing = 0) {
       measureCtx.font = ctx.font;
       const chars = [...text];
 
@@ -826,63 +284,6 @@
       const at100 = metricsFor(text, 100).width || 100;
       const widthSize = (maxWidth / at100) * 100;
       return clamp(Math.min(widthSize, maxHeight, maxSize), 2, maxSize);
-    }
-
-    function renderFontOptions() {
-      clear(els.fontOptions);
-      localFontFamilies.forEach((family) => {
-        const option = document.createElement("option");
-        option.value = family;
-        els.fontOptions.appendChild(option);
-      });
-    }
-
-    async function loadLocalFonts() {
-      if (localFontsRequested) return;
-      localFontsRequested = true;
-
-      if (!("queryLocalFonts" in window)) {
-        els.fontStatus.textContent = "Local font access is unavailable in this browser.";
-        return;
-      }
-
-      els.fontStatus.textContent = "Loading local fonts...";
-
-      try {
-        const fonts = await window.queryLocalFonts();
-        const families = [...new Set(fonts.map((fontFace) => fontFace.family).filter(Boolean))].sort((a, b) => a.localeCompare(b));
-        localFontFamilies = [...new Set(FALLBACK_FONTS.concat(families))];
-        renderFontOptions();
-        els.fontStatus.textContent = `${families.length} local fonts available.`;
-      } catch (error) {
-        localFontsRequested = false;
-        els.fontStatus.textContent = "Allow local font access to search installed fonts.";
-      }
-    }
-
-    function updateReadouts() {
-      rangeControls.forEach(syncFieldFromRange);
-    }
-
-    function applyMarkupDefaults() {
-      [els.fontFamily].forEach((input) => {
-        input.value = input.getAttribute("value") || input.defaultValue || "";
-      });
-
-      setClusters(parseStoredClusters(els.mainText.getAttribute("value") || els.mainText.value), false);
-
-      rangeControls.forEach((control) => {
-        const rangeValue = control.range.getAttribute("value") || control.range.defaultValue;
-        const fieldValue = control.field.getAttribute("value") || rangeValue;
-        control.range.value = rangeValue;
-        control.field.value = fieldValue;
-      });
-    }
-
-    function setControlsVisible(isVisible) {
-      document.body.classList.toggle("controls-hidden", !isVisible);
-      els.toggleControls.setAttribute("aria-expanded", String(isVisible));
-      els.toggleControls.textContent = isVisible ? "Hide Controls" : "Show Controls";
     }
 
     function bodyBox(body, pad = 0) {
@@ -966,7 +367,7 @@
     }
 
     function safeZoneRadius(body) {
-      const amount = numberValue(els.safeZone) / 100;
+      const amount = 5 / 100;
       if (body.kind === "word") return body.size * amount * (body.isAccent ? 2 : 1);
       return Math.min(body.width, body.height) * amount * 3.6;
     }
@@ -1014,7 +415,7 @@
     }
 
     function collisionRadius(body) {
-      const amount = numberValue(els.wordGap) / 100;
+      const amount = 0 / 100;
       if (body.kind === "word") return body.size * amount;
       return Math.min(body.width, body.height) * amount;
     }
@@ -1082,24 +483,11 @@
       img.src = svgUrl;
     }
 
-    function wordSignature() {
-      return [
-        tokensFromInput().join("|"),
-        els.fontFamily.value,
-        els.fontWeight.value,
-        els.letterSpacing.value,
-        els.wordSize.value,
-        els.edgePct.value,
-        WORLD.width.toFixed(2),
-        WORLD.height.toFixed(2)
-      ].join("|");
-    }
-
     function rebuildWords(keepPositions = false) {
       const tokens = tokensFromInput();
       const oldWords = wordBodies;
       const targetSize = wordTargetSize();
-      const edge = numberValue(els.edgePct);
+      const edge = 1;
       const band = (WORLD.height - edge * 2) / Math.max(1, tokens.length);
       const maxAngle = rotationMaxDegrees();
 
@@ -1151,7 +539,6 @@
 
       renderCustomObjects();
       wordBodies.forEach(keepBodyInsideWorld);
-      wordSignatureValue = wordSignature();
       updateBodyNodes();
     }
 
@@ -1171,12 +558,12 @@
 
     function wordTargetSize() {
       const svgR = els.svg.getBoundingClientRect();
-      const base = svgR.height > 0 ? responsiveWordSizePx() / svgR.height * WORLD.height : numberValue(els.wordSize) * WORLD.width / 100;
-      return base * (numberValue(els.wordSize) / 18.1);
+      const base = svgR.height > 0 ? responsiveWordSizePx() / svgR.height * WORLD.height : 18.1 * WORLD.width / 100;
+      return base * (18.1 / 18.1);
     }
 
     function updateWordMetrics() {
-      const edge = numberValue(els.edgePct);
+      const edge = 1;
       wordBodies.forEach((word) => {
         word.size = fitSize(word.text, WORLD.width - edge * 2, WORLD.height, wordTargetSize());
         word.metrics = metricsFor(word.text, word.size);
@@ -1270,99 +657,12 @@
       accentBodies.forEach(keepBodyInsideWorld);
       customObjects.forEach(keepBodyInsideWorld);
       updateBodyNodes();
-      wordSignatureValue = wordSignature();
       gridSignatureValue = "";
     }
 
     function rotationMaxDegrees() {
-      return numberValue(els.rotationAmount) * 0.36;
+      return 0 * 0.36;
     }
-
-    function overlayRectNode(object, color, pad) {
-      const center = bodyCenter(object);
-      const rotate = `rotate(${object.angle.toFixed(3)} ${center.x.toFixed(3)} ${center.y.toFixed(3)})`;
-      const rx = object.height / 2 + pad;
-      const node = svgEl("rect", {
-        x: (object.x - pad).toFixed(3),
-        y: (object.y - pad).toFixed(3),
-        width: (object.width + pad * 2).toFixed(3),
-        height: (object.height + pad * 2).toFixed(3),
-        rx: rx.toFixed(3),
-        ry: rx.toFixed(3),
-        fill: color,
-        transform: rotate,
-        "pointer-events": "none"
-      });
-      return node;
-    }
-
-    function overlayTextNode(word, color, strokeWidth) {
-      const center = bodyCenter(word);
-      const rotate = `rotate(${word.angle.toFixed(3)} ${center.x.toFixed(3)} ${center.y.toFixed(3)})`;
-      const node = svgEl("text", {
-        x: word.x.toFixed(3),
-        y: word.y.toFixed(3),
-        "font-size": word.size.toFixed(3),
-        "font-family": selectedFontStack(),
-        "font-weight": fontWeightValue(),
-        "letter-spacing": letterSpacingValue().toFixed(3),
-        fill: color,
-        stroke: color,
-        "stroke-width": strokeWidth.toFixed(3),
-        "stroke-linecap": "round",
-        "stroke-linejoin": "round",
-        "paint-order": "stroke fill",
-        transform: rotate
-      });
-      node.textContent = word.text;
-      return node;
-    }
-
-    function updateSafeZoneLayer() {
-      clear(els.safeZoneLayer);
-      if (!els.showSafeZone.checked) return;
-      wordBodies.concat(accentBodies).forEach((word) => {
-        els.safeZoneLayer.appendChild(
-          overlayTextNode(word, "rgba(255, 50, 80, 0.45)", safeZoneRadius(word) * 2)
-        );
-      });
-      customObjects.forEach((object) => {
-        const pad = safeZoneRadius(object);
-        if (object.maskDataUrl && object.shape !== "circle") {
-          const center = bodyCenter(object);
-          const rotate = `rotate(${object.angle.toFixed(3)} ${center.x.toFixed(3)} ${center.y.toFixed(3)})`;
-          els.safeZoneLayer.appendChild(svgEl("image", {
-            x: (object.x - pad).toFixed(3),
-            y: (object.y - pad).toFixed(3),
-            width: (object.width + pad * 2).toFixed(3),
-            height: (object.height + pad * 2).toFixed(3),
-            href: object.maskDataUrl,
-            preserveAspectRatio: "none",
-            filter: "url(#safeZoneTint)",
-            transform: rotate,
-            "pointer-events": "none"
-          }));
-        } else {
-          els.safeZoneLayer.appendChild(overlayRectNode(object, "rgba(255, 50, 80, 0.45)", pad));
-        }
-      });
-    }
-
-    function updateCollisionGapLayer() {
-      clear(els.collisionGapLayer);
-      if (!els.showCollisionGap.checked) return;
-      wordBodies.concat(accentBodies).forEach((word) => {
-        els.collisionGapLayer.appendChild(
-          overlayTextNode(word, "rgba(46, 140, 255, 0.45)", collisionRadius(word) * 2)
-        );
-      });
-      customObjects.forEach((object) => {
-        els.collisionGapLayer.appendChild(
-          overlayRectNode(object, "rgba(46, 140, 255, 0.45)", collisionRadius(object))
-        );
-      });
-    }
-
 
     function updateBodyNodes() {
       const maxAngle = rotationMaxDegrees();
@@ -1375,9 +675,9 @@
         word.textNode.setAttribute("x", word.x.toFixed(3));
         word.textNode.setAttribute("y", word.y.toFixed(3));
         word.textNode.setAttribute("font-size", word.size.toFixed(3));
-        word.textNode.setAttribute("font-family", selectedFontStack());
-        word.textNode.setAttribute("font-weight", fontWeightValue());
-        word.textNode.setAttribute("letter-spacing", letterSpacingValue().toFixed(3));
+        word.textNode.setAttribute("font-family", '"univers-next-pro", sans-serif');
+        word.textNode.setAttribute("font-weight", "700");
+        word.textNode.setAttribute("letter-spacing", "0");
         word.textNode.setAttribute("transform", rotate);
         word.textNode.classList.toggle("dragging", word.dragging);
 
@@ -1399,8 +699,8 @@
         word.textNode.setAttribute("x", word.x.toFixed(3));
         word.textNode.setAttribute("y", word.y.toFixed(3));
         word.textNode.setAttribute("font-size", word.size.toFixed(3));
-        word.textNode.setAttribute("font-family", selectedFontStack());
-        word.textNode.setAttribute("letter-spacing", letterSpacingValue().toFixed(3));
+        word.textNode.setAttribute("font-family", '"univers-next-pro", sans-serif');
+        word.textNode.setAttribute("letter-spacing", "0");
         word.textNode.setAttribute("transform", rotate);
         word.textNode.classList.toggle("dragging", word.dragging);
 
@@ -1414,6 +714,7 @@
 
       customObjects.forEach((object) => {
         const center = bodyCenter(object);
+
         const rotate = `rotate(${object.angle.toFixed(3)} ${center.x.toFixed(3)} ${center.y.toFixed(3)})`;
         if (object.native) {
           const sx = object.width / object.native.width;
@@ -1435,8 +736,6 @@
         object.hitNode.setAttribute("transform", rotate);
         object.hitNode.classList.toggle("dragging", object.dragging);
       });
-      updateSafeZoneLayer();
-      updateCollisionGapLayer();
     }
 
     function gridReps() {
@@ -1446,7 +745,6 @@
     function gridSignature() {
       return [
         gridReps(),
-        els.fontFamily.value,
         WORLD.width.toFixed(2),
         WORLD.height.toFixed(2)
       ].join("|");
@@ -1459,12 +757,12 @@
       const reps = gridReps();
       // Initial size estimate: measure pitch at 100px using individual chars (no kerning,
       // matching the placement loop) then scale to fit reps phrases in WORLD.width.
-      measureCtx.font = `700 100px ${selectedFontStack()}`;
+      measureCtx.font = `700 100px ${'"univers-next-pro", sans-serif'}`;
       const ref100Pitch = [...GRID_TEXT].reduce((acc, ch) => acc + measureCtx.measureText(ch).width - 1, 0);
       let size = ref100Pitch > 0 ? (WORLD.width * 100) / (ref100Pitch * reps) : 3;
       // Correct for font-hinting drift: measure actual pitch at the estimated size and
       // rescale so reps * actualPitch = WORLD.width exactly.
-      measureCtx.font = `700 ${size}px ${selectedFontStack()}`;
+      measureCtx.font = `700 ${size}px ${'"univers-next-pro", sans-serif'}`;
       const pitchAtSize = [...GRID_TEXT].reduce((acc, ch) => acc + measureCtx.measureText(ch).width + (-0.01 * size), 0);
       if (pitchAtSize > 0) size = size * (WORLD.width / reps) / pitchAtSize;
       const spacing = -0.01 * size;
@@ -1478,7 +776,7 @@
       const rowContent = GRID_TEXT.repeat(repsNeeded);
       const fragment = document.createDocumentFragment();
 
-      measureCtx.font = `700 ${size}px ${selectedFontStack()}`;
+      measureCtx.font = `700 ${size}px ${'"univers-next-pro", sans-serif'}`;
       const halfAscent = metrics.ascent / 2;
       let charX = 0;
       const row0Chars = [];
@@ -1496,7 +794,7 @@
         const node = svgEl("text", {
           class: "grid-glyph",
           "font-size": size.toFixed(3),
-          "font-family": selectedFontStack(),
+          "font-family": '"univers-next-pro", sans-serif',
           "font-weight": "700",
           x: "0",
           y: y.toFixed(3)
@@ -1564,8 +862,8 @@
     }
 
     function keepBodyInsideWorld(body) {
-      const edge = numberValue(els.edgePct);
-      const bounce = numberValue(els.bounce) / 100;
+      const edge = 1;
+      const bounce = 50 / 100;
       const box = rotatedBodyBounds(body, collisionRadius(body));
 
       if (box.left < edge) {
@@ -1711,7 +1009,7 @@
       const isDrivenContact = a.dragging || b.dragging;
       if (velocityAlongNormal > 0 && !isDrivenContact) return;
 
-      const bounce = numberValue(els.bounce) / 100;
+      const bounce = 50 / 100;
       const closingSpeed = Math.max(0, -velocityAlongNormal);
       const aVelocityN = (a.vx || 0) * nx + (a.vy || 0) * ny;
       const bVelocityN = (b.vx || 0) * nx + (b.vy || 0) * ny;
@@ -1736,8 +1034,8 @@
 
     function applyFloat(word, dt) {
       if (word.dragging) return;
-      const strength = numberValue(els.floatStrength);
-      const targetSpeed = numberValue(els.floatSpeed);
+      const strength = 6;
+      const targetSpeed = 6;
       if (strength <= 0 || targetSpeed <= 0) return;
 
       word.wanderTimer -= dt;
@@ -1755,7 +1053,7 @@
 
     function applyRotation(word, dt, now) {
       const maxAngle = rotationMaxDegrees();
-      const rotationFloat = numberValue(els.rotationFloat);
+      const rotationFloat = 0;
       if (maxAngle <= 0) {
         word.angle = 0;
         word.av = 0;
@@ -1774,7 +1072,7 @@
     }
 
     function solvePhysics(dt, now) {
-      const damping = Math.exp(-numberValue(els.friction) * dt);
+      const damping = Math.exp(-0 * dt);
       const bodies = physicsBodies();
 
       bodies.forEach((body) => {
@@ -1847,24 +1145,6 @@
       updateBodyNodes();
     }
 
-    function resetWords() {
-      rebuildWords(false);
-    }
-
-    function updateFromControls() {
-      syncWorldToContainer();
-      updateReadouts();
-      if (wordSignatureValue !== wordSignature()) {
-        rebuildWords(true);
-      } else {
-        updateWordMetrics();
-        wordBodies.forEach(keepBodyInsideWorld);
-        updateBodyNodes();
-      }
-      if (gridSignatureValue !== gridSignature()) rebuildGrid();
-      layoutGrid();
-    }
-
     function animate(now) {
       const worldChanged = syncWorldToContainer();
       if (worldChanged) applyWorldChange();
@@ -1876,39 +1156,9 @@
       requestAnimationFrame(animate);
     }
 
-    [
-      els.safeZone,
-      els.wordGap,
-      els.floatStrength,
-      els.floatSpeed,
-      els.rotationAmount,
-      els.rotationFloat,
-      els.bounce,
-      els.friction
-    ].forEach((element) => {
-      element.addEventListener("input", updateFromControls);
-      element.addEventListener("change", updateFromControls);
-    });
-
-    rangeControls.forEach((control) => {
-      control.field.addEventListener("input", () => {
-        if (syncRangeFromField(control)) updateFromControls();
-      });
-      control.field.addEventListener("change", () => {
-        syncRangeFromField(control, true);
-        updateFromControls();
-      });
-    });
-
     document.addEventListener("pointermove", moveDrag);
     document.addEventListener("pointerup", endDrag);
     document.addEventListener("pointercancel", endDrag);
-    els.showSafeZone.addEventListener("change", updateBodyNodes);
-    els.showCollisionGap.addEventListener("change", updateBodyNodes);
-    els.resetWords.addEventListener("click", resetWords);
-    els.toggleControls.addEventListener("click", () => {
-      setControlsVisible(document.body.classList.contains("controls-hidden"));
-    });
 
     function loadInlineSvg() {
       const svgDefs = [
@@ -1996,10 +1246,7 @@
       layoutGrid();
     }
 
-    applyMarkupDefaults();
-    setControlsVisible(false);
     syncWorldToContainer();
-    updateReadouts();
     rebuildGrid();
     rebuildWords(false);
     buildAccentWords();
