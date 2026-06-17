@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/29037388/README.md)
 # Hero Section — Text Collision Animation
 
 Interactive hero animation built as a self-contained HTML file. Words and badge elements float and physically collide. Users can drag any element with pointer/touch input.
@@ -11,34 +10,6 @@ There are two language versions:
 | `index-en.html` | English | English page |
 
 The two files are identical in structure and behaviour. The differences are the badge SVGs (sponsor/partner labels) and the accent date words (`7.—9. oktober` vs `7—9 October`).
-
----
-
-## Implementation
-
-### How to embed
-
-The animation is a **standalone HTML page**. The simplest integration is an `<iframe>` that fills the hero section:
-
-```html
-<!-- Slovenian page -->
-<iframe
-  src="/path/to/index.html"
-  style="width: 100%; height: 100%; border: none; display: block;"
-  scrolling="no"
-  title="Hero animation"
-></iframe>
-
-<!-- English page -->
-<iframe
-  src="/path/to/index-en.html"
-  style="width: 100%; height: 100%; border: none; display: block;"
-  scrolling="no"
-  title="Hero animation"
-></iframe>
-```
-
-Alternatively, the contents of the `<style>` block, `<main>` element, and `<script>` block can be lifted directly into the parent page. If doing so, make sure the Typekit stylesheet (see Font section below) is loaded in the parent `<head>`.
 
 ---
 
