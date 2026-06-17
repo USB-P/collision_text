@@ -107,8 +107,8 @@ To update a badge: edit the SVG source file, then copy the SVG markup into the c
 
 | Role | Value |
 |---|---|
-| Page / SVG background | `#f7f6f3` |
-| Paper fill | `#f4f3f1` |
+| Page / SVG background | `#ffffff` |
+| Paper fill | `#ffffff` |
 | Main words | `#000000` |
 | Accent words (date) | `#FF2D55` |
 | Background grid text | `#000000` |
